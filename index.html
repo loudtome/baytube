@@ -2,399 +2,489 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Bay Conditions</title>
 <style>
   :root {
-    /* harbor at dusk: dark field so the colorful maps carry the screen */
     --bg:      #0b1922;
     --bg-deep: #07111a;
-    --panel:   rgba(255,255,255,0.035);
+    --panel:   rgba(255,255,255,0.04);
+    --panel-2: rgba(255,255,255,0.06);
     --line:    rgba(173,201,214,0.14);
-    --ink:     #e9eef0;   /* fog white  */
-    --muted:   #88a0ac;   /* weathered steel */
-    --brass:   #e0a85e;   /* buoy light / active marker */
-    --ok:      #6fb6a4;   /* sea green  */
-    --warn:    #e07d5e;   /* channel-marker coral: stale / offline */
-
+    --ink:     #e9eef0;
+    --muted:   #88a0ac;
+    --brass:   #e0a85e;
+    --ok:      #6fb6a4;
+    --warn:    #e07d5e;
+    --red:     #e2564d;
+    --amber:   #e0a85e;
+    --green:   #5fae8e;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --mono: ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   html, body {
     height: 100%;
-    background: radial-gradient(120% 90% at 50% 0%, var(--bg) 0%, var(--bg-deep) 100%);
+    background: radial-gradient(130% 100% at 50% 0%, var(--bg) 0%, var(--bg-deep) 100%);
     color: var(--ink);
     font-family: var(--sans);
     overflow: hidden;
-    cursor: none;               /* kiosk: no pointer */
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
+  body.kiosk { cursor: none; }
 
-  .screen {
-    height: 100vh;
+  .app {
+    height: 100vh; height: 100dvh;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    padding: clamp(14px, 2.4vh, 26px) clamp(18px, 3vw, 34px);
-    gap: clamp(8px, 1.6vh, 18px);
+    grid-template-rows: auto 1fr;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
-  /* ---- header: name on the left, instrument readout on the right ---- */
-  .head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
+  /* ---------- SCA banner (persistent, every tab) ---------- */
+  .sca {
+    display: flex; align-items: center; gap: 12px;
+    padding: clamp(8px,1.4vh,14px) clamp(16px,3vw,30px);
+    font-weight: 600; letter-spacing: 0.01em;
+    font-size: clamp(14px, 2.1vh, 20px);
+    border-bottom: 1px solid var(--line);
+    transition: background 400ms ease, color 400ms ease;
   }
-  .kicker {
-    font-family: var(--mono);
-    font-size: clamp(10px, 1.5vh, 13px);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .label {
-    font-size: clamp(22px, 4.6vh, 40px);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    line-height: 1.05;
-  }
-  .status {
-    flex: none;
-    text-align: right;
-    font-family: var(--mono);
-    font-size: clamp(11px, 1.7vh, 15px);
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding-top: 6px;
-    white-space: nowrap;
-  }
-  .dot {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--muted);
-    box-shadow: 0 0 0 0 transparent;
-    flex: none;
-  }
-  .status.is-live  .dot { background: var(--ok);   box-shadow: 0 0 10px 1px rgba(111,182,164,0.7); }
-  .status.is-retry .dot { background: var(--brass);box-shadow: 0 0 10px 1px rgba(224,168,94,0.6); }
-  .status.is-offline .dot,
-  .status.is-offline   { color: var(--warn); }
-  .status.is-offline .dot { background: var(--warn); }
-  .status.is-live  { color: var(--ok); }
-
-  /* a slow breath on the live light; off when the map is offline or motion-reduced */
+  .sca .icon { font-size: 1.3em; line-height: 1; }
+  .sca .sub { font-weight: 400; color: inherit; opacity: 0.8; font-size: 0.8em; margin-left: auto; font-family: var(--mono); }
+  .sca.none     { background: rgba(95,174,142,0.12);  color: #bfe6d5; }
+  .sca.active   { background: rgba(226,86,77,0.20);   color: #ffd7d2; }
+  .sca.expected { background: rgba(224,168,94,0.16);  color: #ffe6c4; }
+  .sca.unknown  { background: var(--panel); color: var(--muted); }
   @media (prefers-reduced-motion: no-preference) {
-    .status.is-live .dot { animation: breathe 3.2s ease-in-out infinite; }
+    .sca.active { animation: scaPulse 2.6s ease-in-out infinite; }
   }
-  @keyframes breathe {
-    0%, 100% { box-shadow: 0 0 4px 0 rgba(111,182,164,0.5); }
-    50%      { box-shadow: 0 0 12px 2px rgba(111,182,164,0.85); }
-  }
+  @keyframes scaPulse { 0%,100%{ background: rgba(226,86,77,0.16);} 50%{ background: rgba(226,86,77,0.30);} }
 
-  /* ---- stage: the map itself ---- */
-  .stage {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;             /* lets the image shrink inside the grid row */
-  }
-  .map {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 6px;
-    background: #fff;          /* most NOAA maps assume a white field */
-    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
-    transition: opacity 420ms ease;
-  }
-  .map.is-swapping { opacity: 0; }
+  /* ---------- main = rail + content ---------- */
+  .main { display: grid; min-height: 0; grid-template-columns: auto 1fr; }
+  @media (orientation: portrait) { .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } }
 
-  .placeholder {
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: clamp(13px, 2vh, 17px);
-    text-align: center;
-    letter-spacing: 0.04em;
-    max-width: 30ch;
-    line-height: 1.5;
+  /* ---------- tab rail ---------- */
+  .rail {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: clamp(10px,2vh,20px) clamp(8px,1.2vw,14px);
+    border-right: 1px solid var(--line);
+    overflow: auto;
   }
-  .placeholder .big {
-    display: block;
-    font-family: var(--sans);
-    color: var(--ink);
-    font-size: clamp(18px, 3vh, 26px);
-    margin-bottom: 10px;
-    letter-spacing: 0;
+  @media (orientation: portrait) {
+    .rail { flex-direction: row; border-right: none; border-top: 1px solid var(--line);
+            order: 2; justify-content: space-between; padding: 8px clamp(8px,3vw,20px); gap: 6px; }
   }
+  .tab {
+    appearance: none; border: 0; cursor: pointer; color: var(--muted);
+    background: var(--panel); border-radius: 10px;
+    padding: clamp(10px,1.5vh,16px) clamp(12px,1vw,18px);
+    font-family: var(--sans); font-size: clamp(12px,1.5vh,15px); font-weight: 600;
+    letter-spacing: 0.02em; text-align: left; white-space: nowrap;
+    display: flex; align-items: center; gap: 9px;
+    border-left: 3px solid transparent;
+    transition: background 200ms, color 200ms, transform 120ms, box-shadow 200ms;
+  }
+  @media (orientation: portrait) {
+    .tab { flex: 1 1 0; justify-content: center; text-align: center;
+           border-left: 0; border-top: 3px solid transparent; padding: 10px 6px; }
+  }
+  .tab .pip { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.5; flex: none; }
+  .tab.s-offline .pip { background: var(--warn); opacity: 1; }
+  .tab.s-live .pip { background: var(--ok); opacity: 1; }
+  /* selected "down" state */
+  .tab.active {
+    color: var(--ink); background: var(--bg-deep);
+    border-left-color: var(--brass);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(224,168,94,0.25);
+    transform: translateY(1px);
+  }
+  @media (orientation: portrait) {
+    .tab.active { border-left-color: transparent; border-top-color: var(--brass); }
+  }
+  .tab .cyc {
+    margin-left: auto; width: 26px; height: 3px; border-radius: 2px;
+    background: var(--line); overflow: hidden; flex: none;
+  }
+  @media (orientation: portrait) { .tab .cyc { display: none; } }
+  .tab .cyc > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg,var(--ok),var(--brass)); }
+  .tab.active .cyc > i.run { width: 100%; }
 
-  /* ---- footer: channel markers + tide-fill dwell bar ---- */
-  .foot { display: flex; flex-direction: column; gap: 10px; }
-  .markers {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .marker {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--mono);
-    font-size: clamp(9px, 1.3vh, 12px);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    opacity: 0.55;
-    transition: opacity 250ms ease;
-  }
-  .marker .pip {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--muted);
-    flex: none;
-  }
-  .marker.s-live    .pip { background: var(--ok); }
-  .marker.s-retry   .pip { background: var(--brass); }
-  .marker.s-offline .pip { background: var(--warn); }
-  .marker.s-waiting .pip { background: var(--muted); }
-  .marker.is-active {
-    opacity: 1;
-    color: var(--ink);
-  }
-  .marker.is-active .pip {
-    box-shadow: 0 0 9px 1px var(--brass);
-    outline: 2px solid var(--brass);
-    outline-offset: 2px;
-  }
+  /* ---------- content ---------- */
+  .content { position: relative; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+  @media (orientation: portrait) { .content { order: 1; } }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+          padding: clamp(10px,1.8vh,18px) clamp(16px,3vw,30px) 0; }
+  .head .title { font-size: clamp(18px,3vh,30px); font-weight: 600; }
+  .head .kicker { font-family: var(--mono); font-size: clamp(9px,1.3vh,12px); letter-spacing: 0.2em;
+                  text-transform: uppercase; color: var(--muted); }
+  .head .stamp { font-family: var(--mono); font-size: clamp(10px,1.4vh,13px); color: var(--muted); white-space: nowrap; }
+  .view { flex: 1; min-height: 0; padding: clamp(10px,1.6vh,18px) clamp(16px,3vw,30px) clamp(14px,2vh,22px);
+          display: flex; min-width: 0; }
 
-  .track {
-    height: 2px;
-    background: var(--line);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--ok), var(--brass));
-    border-radius: 2px;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .fill.run { width: 100%; }     /* duration set inline per-feed */
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .fill { width: 100%; opacity: 0.4; transition: none; }
-  }
+  /* map / frames stage */
+  .stage { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; min-width: 0; }
+  .stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px;
+               background: #fff; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+  .framebadge { position: absolute; bottom: 8px; right: 10px; font-family: var(--mono);
+                font-size: 11px; color: var(--muted); background: rgba(7,17,26,0.7);
+                padding: 3px 8px; border-radius: 6px; }
+
+  /* stat + map split (wind / waves) */
+  .split { display: flex; gap: clamp(14px,2vw,26px); flex: 1; min-height: 0; min-width: 0; }
+  @media (orientation: portrait) { .split { flex-direction: column; } }
+  .split .readout { flex: 0 0 clamp(180px, 26%, 300px); display: flex; flex-direction: column;
+                    justify-content: center; gap: 14px; }
+  @media (orientation: portrait) { .split .readout { flex: none; flex-direction: row; align-items: center;
+                    justify-content: space-around; gap: 10px; } }
+  .split .stage { flex: 1; }
+
+  .big { font-variant-numeric: tabular-nums; line-height: 0.95; }
+  .big .n { font-size: clamp(52px, 12vh, 120px); font-weight: 700; letter-spacing: -0.02em; }
+  .big .u { font-size: clamp(16px, 3vh, 26px); color: var(--muted); margin-left: 6px; }
+  .big .lbl { font-family: var(--mono); font-size: clamp(10px,1.4vh,13px); letter-spacing: 0.16em;
+              text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .sub2 { font-family: var(--mono); font-size: clamp(11px,1.6vh,14px); color: var(--muted); }
+
+  /* compass */
+  .compass { width: clamp(120px, 20vh, 200px); height: clamp(120px, 20vh, 200px); flex: none; }
+  .compass text { fill: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .compass .ring { fill: none; stroke: var(--line); stroke-width: 2; }
+  .compass .tick { stroke: var(--line); stroke-width: 2; }
+  .compass .arrow { fill: var(--brass); transition: transform 700ms cubic-bezier(.2,.8,.2,1); transform-box: view-box; }
+  .compass .tail  { fill: rgba(136,160,172,0.5); }
+
+  /* overview grid */
+  .grid { display: grid; gap: clamp(10px,1.6vh,16px); flex: 1; min-height: 0;
+          grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
+  @media (orientation: portrait) { .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+          padding: clamp(12px,2vh,20px); display: flex; flex-direction: column; justify-content: center; gap: 6px; min-height: 0; }
+  .card .lbl { font-family: var(--mono); font-size: clamp(9px,1.3vh,12px); letter-spacing: 0.16em;
+               text-transform: uppercase; color: var(--muted); }
+  .card .v { font-size: clamp(26px,5vh,48px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .card .v small { font-size: 0.42em; color: var(--muted); font-weight: 600; }
+  .card .x { font-size: clamp(11px,1.6vh,14px); color: var(--muted); }
+  .card.sca-card.active { border-color: rgba(226,86,77,0.6); background: rgba(226,86,77,0.12); }
+  .card.sca-card.expected { border-color: rgba(224,168,94,0.5); background: rgba(224,168,94,0.10); }
+  .card.sca-card.none { border-color: rgba(95,174,142,0.4); }
+  .card .arrowmini { display:inline-block; transition: transform 600ms ease; }
+
+  /* tides */
+  .tidewrap { display:flex; flex-direction:column; gap: clamp(10px,2vh,18px); flex:1; min-height:0; }
+  .tidenow { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .tidesched { display:flex; gap:10px; flex-wrap:wrap; }
+  .tideitem { background:var(--panel); border:1px solid var(--line); border-radius:12px;
+              padding: clamp(10px,1.6vh,16px) clamp(12px,1.4vw,18px); display:flex; flex-direction:column; gap:4px; min-width:104px; }
+  .tideitem.next { border-color: var(--brass); box-shadow: inset 0 0 0 1px rgba(224,168,94,0.3); }
+  .tideitem.past { opacity: 0.45; }
+  .tideitem .tt { font-family:var(--mono); font-size: clamp(9px,1.3vh,12px); letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
+  .tideitem .th { font-size: clamp(18px,2.6vh,26px); font-weight:700; }
+  .tideitem .tf { font-size: clamp(11px,1.5vh,13px); color:var(--muted); }
+
+  .placeholder { color: var(--muted); font-family: var(--mono); text-align:center; margin:auto;
+                 font-size: clamp(13px,2vh,17px); line-height:1.5; max-width: 34ch; }
+  .dim { color: var(--muted); }
+  .hide { display: none !important; }
 </style>
 </head>
 <body>
-  <div class="screen">
-    <header class="head">
-      <div>
-        <div class="kicker" id="kicker">Bay Conditions</div>
-        <div class="label" id="label">Starting up</div>
-      </div>
-      <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting</span></div>
-    </header>
-
-    <main class="stage" id="stage">
-      <div class="placeholder" id="placeholder">
-        <span class="big">Warming up the buoys</span>
-        Waiting for the first downloads. Maps appear here as soon as they arrive.
-      </div>
-      <img class="map" id="map" alt="" hidden>
-    </main>
-
-    <footer class="foot">
-      <div class="markers" id="markers"></div>
-      <div class="track"><div class="fill" id="fill"></div></div>
-    </footer>
+  <div class="app">
+    <div class="sca unknown" id="sca"><span class="icon">•</span><span id="scaText">Loading conditions…</span><span class="sub" id="scaSub"></span></div>
+    <div class="main">
+      <nav class="rail" id="rail"></nav>
+      <section class="content">
+        <div class="head">
+          <div><div class="kicker" id="kicker">Bay Conditions</div><div class="title" id="title">Starting up</div></div>
+          <div class="stamp" id="stamp"></div>
+        </div>
+        <div class="view" id="view"><div class="placeholder">Warming up the buoys…</div></div>
+      </section>
+    </div>
   </div>
 
 <script>
 (function () {
   "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var els = { sca:$("sca"), scaText:$("scaText"), scaSub:$("scaSub"), rail:$("rail"),
+              kicker:$("kicker"), title:$("title"), stamp:$("stamp"), view:$("view") };
 
-  var els = {
-    kicker: document.getElementById("kicker"),
-    label: document.getElementById("label"),
-    status: document.getElementById("status"),
-    statusText: document.getElementById("statusText"),
-    stage: document.getElementById("stage"),
-    map: document.getElementById("map"),
-    placeholder: document.getElementById("placeholder"),
-    markers: document.getElementById("markers"),
-    fill: document.getElementById("fill")
-  };
+  // detect a mouse so we only hide the cursor on the kiosk (Pi), not the iPad
+  window.addEventListener("mousemove", function once(){ document.body.classList.remove("kiosk"); window.removeEventListener("mousemove", once); });
+  document.body.classList.add("kiosk");
 
-  var feeds = [];
-  var idx = 0;
-  var dwellTimer = null;
-  var reloadMs = 60000;
-  var pageReloadScheduled = false;
+  var manifest = null, stats = null, tabs = [];
+  var idx = 0, autoTimer = null, resumeTimer = null, frameTimer = null, pinned = false;
+  var cfg = { tab_seconds:10, resume_after_seconds:60, frame_ms:1000,
+              manifest_reload_seconds:60, stats_reload_seconds:120, page_reload_hours:8 };
+  var reloadScheduled = false;
+  var CARD = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
 
-  // The Actions runner is UTC, so we never trust a server-baked human time.
-  // Format the ISO success time here, in the Pi's own local zone.
-  function fmtLocal(iso) {
-    if (!iso) return null;
-    var d = new Date(iso);
-    if (isNaN(d.getTime())) return null;
-    try {
-      return d.toLocaleString(undefined, {
-        month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
-      });
-    } catch (e) {
-      return null;
+  function fmtClock(iso){ if(!iso) return "—"; var d=new Date(iso); if(isNaN(d)) return "—";
+    return d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
+  function fmtAgo(iso){ if(!iso) return ""; var d=new Date(iso); if(isNaN(d)) return "";
+    var m=Math.round((Date.now()-d.getTime())/60000);
+    if(m<1) return "just now"; if(m<60) return m+" min ago";
+    var h=Math.round(m/60); if(h<24) return h+"h ago"; return Math.round(h/24)+"d ago"; }
+  function num(v,d){ return (v===null||v===undefined||isNaN(v)) ? (d===undefined?"—":d) : v; }
+
+  /* ---------------- SCA banner ---------------- */
+  function renderSCA(){
+    var s = stats && stats.sca;
+    var e = els.sca, t = els.scaText, sub = els.scaSub;
+    if(!s){ e.className="sca unknown"; t.textContent="Small craft advisory: unknown"; sub.textContent=""; return; }
+    if(s.status==="active"){
+      e.className="sca active"; e.firstChild.textContent="⚠";
+      t.textContent="SMALL CRAFT ADVISORY IN EFFECT";
+      sub.textContent = s.ends_iso ? "until "+fmtClock(s.ends_iso) : "";
+    } else if(s.status==="expected"){
+      e.className="sca expected"; e.firstChild.textContent="⚠";
+      t.textContent="Small craft advisory expected";
+      sub.textContent = s.starts_iso ? "starts "+fmtClock(s.starts_iso) : "next 24h";
+    } else {
+      e.className="sca none"; e.firstChild.textContent="✓";
+      t.textContent="No small craft advisory";
+      sub.textContent = "waters look manageable";
     }
   }
 
-  function updatedWhen(f) {
-    return fmtLocal(f.last_success_iso) || f.updated_human || "recently";
+  /* ---------------- compass svg ---------------- */
+  function compassSVG(deg){
+    var rot = (deg==null? 0 : deg);
+    return '<svg class="compass" viewBox="0 0 120 120" aria-hidden="true">'
+      + '<circle class="ring" cx="60" cy="60" r="52"/>'
+      + '<line class="tick" x1="60" y1="8" x2="60" y2="18"/><line class="tick" x1="60" y1="102" x2="60" y2="112"/>'
+      + '<line class="tick" x1="8" y1="60" x2="18" y2="60"/><line class="tick" x1="102" y1="60" x2="112" y2="60"/>'
+      + '<text x="60" y="30" text-anchor="middle">N</text><text x="60" y="98" text-anchor="middle">S</text>'
+      + '<text x="94" y="64" text-anchor="middle">E</text><text x="26" y="64" text-anchor="middle">W</text>'
+      + '<g class="arrow" transform="rotate('+rot+' 60 60)">'
+      +   '<polygon points="60,20 52,64 60,56 68,64"/>'
+      +   '<polygon class="tail" points="60,100 54,64 60,70 66,64"/>'
+      + '</g></svg>';
   }
 
-  // A long-lived kiosk page won't pick up changes to this file's own
-  // markup/CSS/JS until it reloads. Schedule one full reload so design
-  // updates reach the Pi hands-free. Set once, on the first manifest.
-  function schedulePageReload(hours) {
-    if (pageReloadScheduled) return;
-    var h = (typeof hours === "number" && hours > 0) ? hours : 8;
-    pageReloadScheduled = true;
-    setTimeout(function () { location.reload(); }, h * 3600 * 1000);
+  /* ---------------- views ---------------- */
+  function tabById(id){ for(var i=0;i<tabs.length;i++) if(tabs[i].id===id) return tabs[i]; return null; }
+
+  function renderOverview(){
+    var w=(stats&&stats.wind)||{}, wv=(stats&&stats.waves)||{}, wt=(stats&&stats.water)||{},
+        td=(stats&&stats.tide)||{}, sc=(stats&&stats.sca)||{status:"unknown"};
+    var next = td.next;
+    var tideLine = td.state ? (cap(td.state) + (next? " · "+(next.type==="H"?"high":"low")+" "+fmtClock(next.iso):"")) : "—";
+    var scaTxt = sc.status==="active"?"In effect": sc.status==="expected"?"Expected": sc.status==="none"?"None":"—";
+    var arrow = w.dir_deg!=null ? '<span class="arrowmini" style="transform:rotate('+w.dir_deg+'deg)">↑</span> ' : '';
+    var html = '<div class="grid">'
+      + card("sca-card "+ (sc.status||"none"), "Small Craft Advisory", scaTxt,
+             sc.status==="active"&&sc.ends_iso?("until "+fmtClock(sc.ends_iso)): sc.status==="expected"&&sc.starts_iso?("from "+fmtClock(sc.starts_iso)):"")
+      + card("", "Wind", num(w.speed_kt)+'<small> kt '+(w.dir_cardinal||"")+'</small>',
+             (w.gust_kt!=null?("gusts "+w.gust_kt+" kt · "):"")+ (arrow? "from "+(w.dir_cardinal||""):"") )
+      + card("", "Wave Height", num(wv.height_ft)+'<small> ft</small>', "significant, forecast")
+      + card("", "Water Temp", num(wt.temp_f)+'<small> °F</small>', wt.obs_iso?fmtAgo(wt.obs_iso):"")
+      + card("", "Tide", num(td.now_ft)+'<small> ft</small>', tideLine)
+      + card("", "Location", (manifest&&manifest.location)||"—", "near Kilmarnock, VA")
+      + '</div>';
+    els.view.innerHTML = html;
+  }
+  function card(cls,label,value,extra){
+    return '<div class="card '+cls+'"><div class="lbl">'+label+'</div><div class="v">'+value+'</div>'
+      + '<div class="x">'+(extra||"")+'</div></div>';
+  }
+  function cap(s){ return s? s.charAt(0).toUpperCase()+s.slice(1):s; }
+
+  function renderWind(tab){
+    var w=(stats&&stats.wind)||{};
+    var readout = '<div>'
+      + '<div class="big"><div class="lbl">Wind speed</div><span class="n">'+num(w.speed_kt)+'</span><span class="u">kt</span></div>'
+      + '<div class="sub2">'+(w.gust_kt!=null?("gusts "+w.gust_kt+" kt"):"")+(w.obs_iso?(" · "+fmtAgo(w.obs_iso)):"")+'</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:14px">'+compassSVG(w.dir_deg)
+      + '<div><div class="big"><span class="n" style="font-size:clamp(30px,7vh,64px)">'+(w.dir_cardinal||"—")+'</span></div>'
+      + '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>';
+    els.view.innerHTML = '<div class="split"><div class="readout">'+readout+'</div>'
+      + '<div class="stage" id="stage"></div></div>';
+    mountFrames(tab, $("stage"));
   }
 
-  function feedState(f) {
-    if (!f.file && !f.last_success_iso) return "waiting";
-    if (f.stale) return "offline";
-    if (f.ok === false) return "retry";
+  function renderWaves(tab){
+    var wv=(stats&&stats.waves)||{};
+    var peak=null; (wv.forecast||[]).forEach(function(f){ if(peak==null||f.ft>peak) peak=f.ft; });
+    var readout = '<div class="big"><div class="lbl">Significant wave height</div>'
+      + '<span class="n">'+num(wv.height_ft)+'</span><span class="u">ft</span></div>'
+      + '<div class="sub2">'+(peak!=null?("peak "+peak+" ft next 24h"):"forecast")+'</div>';
+    els.view.innerHTML = '<div class="split"><div class="readout">'+readout+'</div>'
+      + '<div class="stage" id="stage"></div></div>';
+    mountFrames(tab, $("stage"));
+  }
+
+  function renderTides(){
+    var td=(stats&&stats.tide)||{};
+    var evs = (td.events||[]).slice();
+    var now = Date.now();
+    // show the last past event + all upcoming today/tomorrow (cap 6)
+    var future = evs.filter(function(e){ return new Date(e.iso).getTime()>now; });
+    var past = evs.filter(function(e){ return new Date(e.iso).getTime()<=now; });
+    var show = (past.slice(-1)).concat(future).slice(0,6);
+    var nextIso = td.next && td.next.iso;
+    var items = show.map(function(e){
+      var isNext = e.iso===nextIso, isPast = new Date(e.iso).getTime()<=now;
+      var hi = e.type==="H";
+      return '<div class="tideitem'+(isNext?" next":"")+(isPast?" past":"")+'">'
+        + '<div class="tt">'+(hi?"▲ High":"▼ Low")+'</div>'
+        + '<div class="th">'+fmtClock(e.iso)+'</div>'
+        + '<div class="tf">'+e.ft+' ft</div></div>';
+    }).join("");
+    var stateTxt = td.state? cap(td.state): "—";
+    els.view.innerHTML = '<div class="tidewrap">'
+      + '<div class="tidenow"><div class="big"><div class="lbl">Now · '+stateTxt+'</div>'
+      +   '<span class="n">'+num(td.now_ft)+'</span><span class="u">ft</span></div>'
+      +   '<div class="sub2">'+(td.obs_iso?("as of "+fmtClock(td.obs_iso)):"")+'</div></div>'
+      + '<div class="tidesched">'+(items||'<div class="placeholder">No tide data.</div>')+'</div></div>';
+  }
+
+  function renderImage(tab){
+    els.view.innerHTML = '<div class="stage" id="stage"></div>';
+    var stage=$("stage");
+    if(!tab.file){ stage.innerHTML='<div class="placeholder">Waiting for first download.</div>'; return; }
+    var img=new Image();
+    img.onload=function(){ stage.innerHTML=""; stage.appendChild(img); };
+    img.onerror=function(){ stage.innerHTML='<div class="placeholder">Map unavailable. It will return on the next download.</div>'; };
+    img.src="images/"+tab.file+"?v="+encodeURIComponent(tab.last_success_iso||"0");
+  }
+
+  /* frames animation shared by wind/waves */
+  var framePool = [];
+  function mountFrames(tab, stage){
+    stopFrames();
+    var frames = tab.frames||[];
+    if(!frames.length){ stage.innerHTML='<div class="placeholder">Building the loop…</div>'; return; }
+    var bust = "?v="+encodeURIComponent(tab.frames_last_success||"0");
+    var img = new Image(); img.decoding="async";
+    stage.innerHTML=""; stage.appendChild(img);
+    var badge=document.createElement("div"); badge.className="framebadge"; stage.appendChild(badge);
+    // preload
+    framePool = frames.map(function(f){ var im=new Image(); im.src="images/"+f+bust; return im; });
+    var i=0;
+    function step(){
+      var src="images/"+frames[i]+bust;
+      img.src=src; badge.textContent=(i+1)+"/"+frames.length;
+      i=(i+1)%frames.length;
+    }
+    step();
+    frameTimer=setInterval(step, cfg.frame_ms);
+  }
+  function stopFrames(){ if(frameTimer){ clearInterval(frameTimer); frameTimer=null; } framePool=[]; }
+
+  /* ---------------- tab machinery ---------------- */
+  function tabStatus(t){
+    if(t.type==="image"){ if(t.stale) return "offline"; if(t.file) return "live"; return ""; }
+    if(t.frames){ if(t.stale) return "offline"; if((t.frames||[]).length) return "live"; return ""; }
     return "live";
   }
-
-  function statusText(f, state) {
-    if (state === "waiting") return "Waiting for first download";
-    if (state === "offline") return "Source offline · last good " + updatedWhen(f);
-    if (state === "retry")   return "Updated " + updatedWhen(f) + " · reconnecting";
-    return "Updated " + updatedWhen(f);
-  }
-
-  function buildMarkers() {
-    els.markers.innerHTML = "";
-    feeds.forEach(function (f, i) {
-      var m = document.createElement("div");
-      m.className = "marker s-" + feedState(f) + (i === idx ? " is-active" : "");
-      var pip = document.createElement("span");
-      pip.className = "pip";
-      var name = document.createElement("span");
-      name.textContent = f.label || f.id;
-      m.appendChild(pip);
-      m.appendChild(name);
-      els.markers.appendChild(m);
+  function buildRail(){
+    els.rail.innerHTML="";
+    tabs.forEach(function(t,i){
+      var b=document.createElement("button");
+      b.className="tab s-"+tabStatus(t)+(i===idx?" active":"");
+      b.innerHTML='<span class="pip"></span><span>'+(t.label||t.id)+'</span><span class="cyc"><i></i></span>';
+      b.addEventListener("click", function(){ pinTo(i); });
+      els.rail.appendChild(b);
     });
   }
-
-  function runDwellBar(seconds) {
-    var fill = els.fill;
-    fill.classList.remove("run");
-    fill.style.transition = "none";
-    fill.style.width = "0%";
-    // force reflow so the reset takes before we animate
-    void fill.offsetWidth;
-    fill.style.transition = "width " + seconds + "s linear";
-    fill.classList.add("run");
+  function markActiveRail(){
+    var kids=els.rail.children;
+    for(var i=0;i<kids.length;i++){ kids[i].classList.toggle("active", i===idx); }
+    // run the cycle bar on the active tab (landscape only; hidden in portrait)
+    var active=kids[idx]; if(!active) return;
+    var bar=active.querySelector(".cyc > i"); if(!bar) return;
+    bar.classList.remove("run"); bar.style.transition="none"; bar.style.width="0%";
+    void bar.offsetWidth;
+    if(!pinned){ var secs=(tabs[idx].dwell_seconds||cfg.tab_seconds);
+      bar.style.transition="width "+secs+"s linear"; bar.classList.add("run"); }
   }
 
-  function showFeed(i) {
-    if (!feeds.length) return;
-    idx = ((i % feeds.length) + feeds.length) % feeds.length;
-    var f = feeds[idx];
-    var state = feedState(f);
-
-    els.kicker.textContent = f.kicker || "Bay Conditions";
-    els.label.textContent = f.label || f.id;
-    els.status.className = "status is-" + state;
-    els.statusText.textContent = statusText(f, state);
-    buildMarkers();
-
-    var dwell = f.dwell_seconds || 12;
-
-    if (f.file) {
-      var src = "images/" + f.file + "?v=" + encodeURIComponent(f.last_success_iso || "0");
-      els.map.classList.add("is-swapping");
-      var loader = new Image();
-      loader.onload = function () {
-        els.map.src = src;
-        els.map.hidden = false;
-        els.placeholder.hidden = true;
-        els.map.classList.remove("is-swapping");
-      };
-      loader.onerror = function () {
-        // file vanished or unreadable: fall back to the card
-        els.map.hidden = true;
-        els.placeholder.hidden = false;
-        els.placeholder.innerHTML =
-          '<span class="big">' + (f.label || f.id) + '</span>Map file unavailable. It will return on the next download.';
-        els.map.classList.remove("is-swapping");
-      };
-      loader.src = src;
-    } else {
-      els.map.hidden = true;
-      els.placeholder.hidden = false;
-      els.placeholder.innerHTML =
-        '<span class="big">' + (f.label || f.id) + '</span>Waiting for first download.';
+  function showTab(i){
+    if(!tabs.length) return;
+    idx=((i%tabs.length)+tabs.length)%tabs.length;
+    var t=tabs[idx];
+    els.kicker.textContent=t.kicker||((manifest&&manifest.location)||"Bay Conditions");
+    els.title.textContent=t.label||t.id;
+    els.stamp.textContent = stats&&stats.generated? "updated "+fmtAgo(stats.generated) : "";
+    stopFrames();
+    switch(t.type){
+      case "overview": renderOverview(); break;
+      case "wind":     renderWind(t); break;
+      case "waves":    renderWaves(t); break;
+      case "tides":    renderTides(); break;
+      case "image":    renderImage(t); break;
+      default:         if(t.frames) mountInto(t); else renderOverview();
     }
+    markActiveRail();
+    scheduleNext();
+  }
+  function mountInto(t){ els.view.innerHTML='<div class="stage" id="stage"></div>'; mountFrames(t,$("stage")); }
 
-    runDwellBar(dwell);
-    clearTimeout(dwellTimer);
-    dwellTimer = setTimeout(function () { showFeed(idx + 1); }, dwell * 1000);
+  function scheduleNext(){
+    clearTimeout(autoTimer);
+    if(pinned) return;
+    var secs=(tabs[idx] && tabs[idx].dwell_seconds) || cfg.tab_seconds;
+    autoTimer=setTimeout(function(){ showTab(idx+1); }, secs*1000);
+  }
+  function pinTo(i){
+    pinned=true; clearTimeout(autoTimer); clearTimeout(resumeTimer);
+    showTab(i);
+    resumeTimer=setTimeout(function(){ pinned=false; markActiveRail(); scheduleNext(); },
+                           (cfg.resume_after_seconds||60)*1000);
   }
 
-  function applyManifest(data) {
-    var incoming = (data && data.feeds) || [];
-    if (data && data.manifest_reload_seconds) {
-      reloadMs = data.manifest_reload_seconds * 1000;
-    }
-    schedulePageReload(data && data.page_reload_hours);
-    var firstLoad = feeds.length === 0;
-    // keep showing the same feed across reloads when possible
-    var currentId = feeds.length ? feeds[idx].id : null;
-    feeds = incoming;
-
-    if (!feeds.length) {
-      clearTimeout(dwellTimer);
-      els.map.hidden = true;
-      els.placeholder.hidden = false;
-      els.label.textContent = "No feeds yet";
-      els.kicker.textContent = "Bay Conditions";
-      els.status.className = "status";
-      els.statusText.textContent = "Check the config";
-      els.placeholder.innerHTML =
-        '<span class="big">Warming up the buoys</span>Waiting for the first downloads.';
-      buildMarkers();
-      return;
-    }
-
-    if (firstLoad) {
-      showFeed(0);
-    } else {
-      // refresh labels/markers in place; re-anchor index to the same feed
-      var newIdx = feeds.findIndex(function (f) { return f.id === currentId; });
-      idx = newIdx >= 0 ? newIdx : Math.min(idx, feeds.length - 1);
-      buildMarkers();
+  /* ---------------- data loading ---------------- */
+  function applyCfg(m){
+    ["tab_seconds","resume_after_seconds","frame_ms","manifest_reload_seconds",
+     "stats_reload_seconds","page_reload_hours"].forEach(function(k){ if(m[k]!=null) cfg[k]=m[k]; });
+  }
+  function schedulePageReload(){
+    if(reloadScheduled) return; reloadScheduled=true;
+    var h=cfg.page_reload_hours>0?cfg.page_reload_hours:8;
+    setTimeout(function(){ location.reload(); }, h*3600*1000);
+  }
+  function applyManifest(m){
+    manifest=m; applyCfg(m); schedulePageReload();
+    var currentId = tabs.length? tabs[idx].id : null;
+    var firstLoad = tabs.length===0;
+    tabs = m.tabs||[];
+    if(!tabs.length){ els.view.innerHTML='<div class="placeholder">No tabs configured.</div>'; return; }
+    buildRail();
+    if(firstLoad){ idx=0; showTab(0); }
+    else {
+      var ni=-1; for(var i=0;i<tabs.length;i++){ if(tabs[i].id===currentId){ ni=i; break; } }
+      idx = ni>=0?ni:Math.min(idx,tabs.length-1);
+      // refresh current view in place with new frame lists / images
+      showTab(idx);
     }
   }
-
-  function loadManifest() {
-    fetch("manifest.json?cb=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error("manifest " + r.status); return r.json(); })
-      .then(applyManifest)
-      .catch(function () { /* keep showing whatever we have; try again next cycle */ })
-      .finally(function () { setTimeout(loadManifest, reloadMs); });
+  function applyStats(s){ stats=s; renderSCA();
+    // live-refresh the current view if it's data-driven
+    var t=tabs[idx]; if(!t) return;
+    if(["overview","wind","waves","tides"].indexOf(t.type)>=0){ /* re-render but keep frames running */
+      var hadFrames = !!frameTimer;
+      if(t.type==="overview") renderOverview();
+      else if(t.type==="tides") renderTides();
+      else if(t.type==="wind"||t.type==="waves"){ /* only refresh readout numbers, keep animation */
+        if(!hadFrames) showTab(idx);
+      }
+    }
+    els.stamp.textContent = s&&s.generated? "updated "+fmtAgo(s.generated):"";
   }
 
-  loadManifest();
+  function poll(url, apply, everyKey){
+    fetch(url+"?cb="+Date.now(),{cache:"no-store"})
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(apply).catch(function(){})
+      .finally(function(){ setTimeout(function(){ poll(url,apply,everyKey); }, (cfg[everyKey]||60)*1000); });
+  }
+  poll("manifest.json", applyManifest, "manifest_reload_seconds");
+  poll("stats.json", applyStats, "stats_reload_seconds");
 })();
 </script>
 </body>

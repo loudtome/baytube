@@ -1,70 +1,102 @@
 {
   "settings": {
     "manifest_reload_seconds": 60,
+    "stats_reload_seconds": 120,
     "page_reload_hours": 8,
+    "tab_seconds": 10,
+    "resume_after_seconds": 60,
+    "frame_ms": 1000,
     "request_timeout_seconds": 20,
-    "user_agent": "BayDash/1.0 (GitHub Actions; personal dashboard)",
+    "user_agent": "BayDash/1.0 (loudtome github; personal boating dashboard)",
     "default_dwell_seconds": 12,
     "default_stale_after_minutes": 1440
   },
 
-  "_comment": "Each feed is one card on the display. To add a map, copy a block and fill in url. To remove one, delete its block or set enabled:false. refresh_minutes = how often to re-download. dwell_seconds = how long it shows on screen. stale_after_minutes = how old a file can get before the screen marks the source offline. page_reload_hours = how often the kiosk fully reloads index.html so design/markup changes reach the Pi hands-free.",
+  "location": {
+    "label": "Windmill Point, VA",
+    "near": "Kilmarnock",
+    "lat": 37.615,
+    "lon": -76.289
+  },
 
-  "feeds": [
+  "_comment": "stats_sources feed the numeric views (Now / Wind / Waves / Tides) via stats.json. tabs is the ordered list the display cycles through, 'type' drives how each renders: overview = glanceable Now screen; wind/waves = big number(s) + compass/trend PLUS an animated regional map built from many PNGs (the 'frames' block); tides = current state + hi/lo schedule; image = a single map. A 'frames' block is scraped live each run (frame filenames shift per model run), all frames downloaded, and the display animates them frame_ms apart. frame_take: 'first' = soonest frames (forecast), 'last' = most recent (nowcast).",
+
+  "stats_sources": {
+    "gridpoint": "https://api.weather.gov/gridpoints/AKQ/88,86",
+    "tide_station": "8636580",
+    "buoy": "44058",
+    "marine_zones": "ANZ630,ANZ631,ANZ635"
+  },
+
+  "tabs": [
     {
-      "id": "nettles",
-      "label": "Sea Nettle Forecast",
-      "kicker": "NOAA NCCOS",
-      "enabled": true,
-      "url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/FullBay/Nettles_Boxes.png",
-      "refresh_minutes": 720,
+      "id": "now",
+      "label": "Now",
+      "type": "overview",
+      "dwell_seconds": 12
+    },
+    {
+      "id": "wind",
+      "label": "Wind",
+      "type": "wind",
+      "kicker": "Buoy 44058 · CBOFS",
       "dwell_seconds": 14,
-      "stale_after_minutes": 2160,
-      "note": "Overview map that works out of the box. To show the full-color daily probability map instead, open the Full Bay forecast page, right-click the map, Copy image address, and paste it here. Seasonal product; expect it offline in winter."
+      "frames": {
+        "page_url": "https://cdn.tidesandcurrents.noaa.gov/ofs/cbofs/wwwgraphics/CBOFS2_cb_all_wind_now_option",
+        "frame_base": "https://cdn.tidesandcurrents.noaa.gov/ofs/cbofs/wwwgraphics/",
+        "frame_regex": "CBOFS2_cb_all_wind_now_(\\d+)\\.png",
+        "frame_take": "last",
+        "max_frames": 16,
+        "refresh_minutes": 60,
+        "stale_after_minutes": 360,
+        "note": "NOAA CBOFS wind nowcast, Chesapeake Bay. Hourly frames for the last ~24h."
+      }
+    },
+    {
+      "id": "waves",
+      "label": "Waves",
+      "type": "waves",
+      "kicker": "NWS forecast · VIMS CBEFS",
+      "dwell_seconds": 16,
+      "frames": {
+        "page_url": "https://www.vims.edu/research/products/cbefs/waves/",
+        "frame_base": "https://web4.vims.edu/drf/abever/FIGURES/",
+        "frame_regex": "HSIG_Nowcast_(\\d+)\\.png",
+        "frame_take": "first",
+        "max_frames": 16,
+        "refresh_minutes": 180,
+        "stale_after_minutes": 720,
+        "note": "VIMS CBEFS significant wave-height forecast. Frame index shifts each model run, so we always read the live list."
+      }
+    },
+    {
+      "id": "tides",
+      "label": "Tides",
+      "type": "tides",
+      "kicker": "NOAA CO-OPS · Windmill Point",
+      "dwell_seconds": 12
     },
     {
       "id": "radar",
-      "label": "Regional Radar",
+      "label": "Radar",
+      "type": "image",
       "kicker": "NWS Wakefield",
-      "enabled": true,
       "url": "https://radar.weather.gov/ridge/standard/KAKQ_loop.gif",
       "refresh_minutes": 30,
       "dwell_seconds": 12,
       "stale_after_minutes": 120,
-      "note": "Animated loop. KAKQ is the office covering the Northern Neck. refresh_minutes is capped by the workflow's ~30 min cron cadence."
+      "note": "Animated loop. KAKQ covers the Northern Neck. Capped by the ~30 min cron."
     },
     {
-      "id": "tides",
-      "label": "Tide Predictions",
-      "kicker": "NOAA Tides & Currents",
-      "enabled": false,
-      "url": "PASTE_IMAGE_URL_HERE",
+      "id": "nettles",
+      "label": "Sea Nettles",
+      "type": "image",
+      "kicker": "NOAA NCCOS",
+      "url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/FullBay/Nettles_Boxes.png",
       "refresh_minutes": 720,
-      "dwell_seconds": 12,
-      "stale_after_minutes": 2880,
-      "note": "Open tidesandcurrents.noaa.gov, find your nearest station (e.g. Lewisetta or Windmill Point), open its tide prediction plot, copy the image address into url, then set enabled:true."
-    },
-    {
-      "id": "marine",
-      "label": "Marine Forecast",
-      "kicker": "NWS Wakefield",
-      "enabled": false,
-      "url": "PASTE_IMAGE_URL_HERE",
-      "refresh_minutes": 180,
-      "dwell_seconds": 12,
-      "stale_after_minutes": 720,
-      "note": "From weather.gov/akq marine/briefing graphics. Grab a wind or wave forecast image URL, paste here, set enabled:true."
-    },
-    {
-      "id": "buoy",
-      "label": "Bay Water & Wind",
-      "kicker": "NOAA CBIBS / NDBC",
-      "enabled": false,
-      "url": "PASTE_IMAGE_URL_HERE",
-      "refresh_minutes": 60,
-      "dwell_seconds": 12,
-      "stale_after_minutes": 360,
-      "note": "From buoybay.noaa.gov or an NDBC station plot for a nearby buoy (water temp, wind). Paste the plot image URL, set enabled:true."
+      "dwell_seconds": 14,
+      "stale_after_minutes": 2160,
+      "note": "Sea nettle probability, Full Bay. Seasonal; expect it offline in winter."
     }
   ]
 }

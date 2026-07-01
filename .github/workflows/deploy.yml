@@ -52,10 +52,15 @@ jobs:
           REPO="${{ github.event.repository.name }}"
           python3 seed_from_live.py "https://${OWNER}.github.io/${REPO}"
 
-      - name: Fetch feeds
+      - name: Fetch maps and animation frames
         env:
           BAYDASH_OUTPUT_DIR: build
         run: python3 fetch_feeds.py
+
+      - name: Fetch live stats (tides, wind, waves, SCA)
+        env:
+          BAYDASH_OUTPUT_DIR: build
+        run: python3 fetch_stats.py
 
       - name: Assemble static files into build/
         run: |

@@ -26,6 +26,7 @@ import urllib.error
 OUTPUT_DIR = os.environ.get("BAYDASH_OUTPUT_DIR", "build")
 IMAGES_DIR = os.path.join(OUTPUT_DIR, "images")
 MANIFEST_PATH = os.path.join(OUTPUT_DIR, "manifest.json")
+STATS_PATH = os.path.join(OUTPUT_DIR, "stats.json")
 USER_AGENT = "BayDash-seed/1.0"
 TIMEOUT = 30
 
@@ -36,42 +37,54 @@ def fetch(url):
         return resp.read()
 
 
+def seed_file(base, rel):
+    """Download one images/<rel> from the live site into build/images/<rel>."""
+    dest = os.path.join(IMAGES_DIR, rel)
+    try:
+        data = fetch(f"{base}/images/{rel}?cb=seed")
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "wb") as out:
+            out.write(data)
+        print(f"seeded {rel} ({len(data) // 1024} KB)")
+    except (urllib.error.URLError, OSError) as e:
+        print(f"skip {rel}: {e}")
+
+
 def main():
     if len(sys.argv) < 2:
         print("usage: seed_from_live.py <BASE_URL>")
         return 2
     base = sys.argv[1].rstrip("/")
     os.makedirs(IMAGES_DIR, exist_ok=True)
-
     run_id = os.environ.get("GITHUB_RUN_ID", "seed")
+
+    # stats.json is best-effort: lets fetch_stats.py carry values forward.
+    try:
+        raw_stats = fetch(f"{base}/stats.json?cb={run_id}")
+        json.loads(raw_stats)
+        with open(STATS_PATH, "wb") as f:
+            f.write(raw_stats)
+        print("seeded stats.json")
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        print(f"no live stats.json ({e})")
+
     try:
         raw = fetch(f"{base}/manifest.json?cb={run_id}")
-    except (urllib.error.URLError, OSError) as e:
-        print(f"No live manifest yet ({e}) - starting clean.")
-        return 0
-
-    try:
         manifest = json.loads(raw)
-    except ValueError as e:
-        print(f"Live manifest was not valid JSON ({e}) - starting clean.")
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        print(f"No live manifest yet ({e}) - starting clean.")
         return 0
 
     with open(MANIFEST_PATH, "wb") as f:
         f.write(raw)
     print(f"Seeded manifest.json from {base}")
 
-    for feed in manifest.get("feeds", []):
-        fn = feed.get("file")
-        if not fn:
-            continue
-        dest = os.path.join(IMAGES_DIR, fn)
-        try:
-            data = fetch(f"{base}/images/{fn}?cb=seed")
-            with open(dest, "wb") as out:
-                out.write(data)
-            print(f"seeded {fn} ({len(data) // 1024} KB)")
-        except (urllib.error.URLError, OSError) as e:
-            print(f"skip {fn}: {e}")
+    # manifest.tabs: image tabs carry `file`, frame tabs carry `frames: [...]`
+    for tab in manifest.get("tabs", []):
+        if tab.get("file"):
+            seed_file(base, tab["file"])
+        for rel in tab.get("frames", []) or []:
+            seed_file(base, rel)
     return 0
 
 
