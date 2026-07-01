@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Bay Conditions</title>
+<style>
+  :root {
+    /* harbor at dusk: dark field so the colorful maps carry the screen */
+    --bg:      #0b1922;
+    --bg-deep: #07111a;
+    --panel:   rgba(255,255,255,0.035);
+    --line:    rgba(173,201,214,0.14);
+    --ink:     #e9eef0;   /* fog white  */
+    --muted:   #88a0ac;   /* weathered steel */
+    --brass:   #e0a85e;   /* buoy light / active marker */
+    --ok:      #6fb6a4;   /* sea green  */
+    --warn:    #e07d5e;   /* channel-marker coral: stale / offline */
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: radial-gradient(120% 90% at 50% 0%, var(--bg) 0%, var(--bg-deep) 100%);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow: hidden;
+    cursor: none;               /* kiosk: no pointer */
+  }
+
+  .screen {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: clamp(14px, 2.4vh, 26px) clamp(18px, 3vw, 34px);
+    gap: clamp(8px, 1.6vh, 18px);
+  }
+
+  /* ---- header: name on the left, instrument readout on the right ---- */
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: clamp(10px, 1.5vh, 13px);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .label {
+    font-size: clamp(22px, 4.6vh, 40px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+  .status {
+    flex: none;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: clamp(11px, 1.7vh, 15px);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding-top: 6px;
+    white-space: nowrap;
+  }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--muted);
+    box-shadow: 0 0 0 0 transparent;
+    flex: none;
+  }
+  .status.is-live  .dot { background: var(--ok);   box-shadow: 0 0 10px 1px rgba(111,182,164,0.7); }
+  .status.is-retry .dot { background: var(--brass);box-shadow: 0 0 10px 1px rgba(224,168,94,0.6); }
+  .status.is-offline .dot,
+  .status.is-offline   { color: var(--warn); }
+  .status.is-offline .dot { background: var(--warn); }
+  .status.is-live  { color: var(--ok); }
+
+  /* a slow breath on the live light; off when the map is offline or motion-reduced */
+  @media (prefers-reduced-motion: no-preference) {
+    .status.is-live .dot { animation: breathe 3.2s ease-in-out infinite; }
+  }
+  @keyframes breathe {
+    0%, 100% { box-shadow: 0 0 4px 0 rgba(111,182,164,0.5); }
+    50%      { box-shadow: 0 0 12px 2px rgba(111,182,164,0.85); }
+  }
+
+  /* ---- stage: the map itself ---- */
+  .stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;             /* lets the image shrink inside the grid row */
+  }
+  .map {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #fff;          /* most NOAA maps assume a white field */
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+    transition: opacity 420ms ease;
+  }
+  .map.is-swapping { opacity: 0; }
+
+  .placeholder {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: clamp(13px, 2vh, 17px);
+    text-align: center;
+    letter-spacing: 0.04em;
+    max-width: 30ch;
+    line-height: 1.5;
+  }
+  .placeholder .big {
+    display: block;
+    font-family: var(--sans);
+    color: var(--ink);
+    font-size: clamp(18px, 3vh, 26px);
+    margin-bottom: 10px;
+    letter-spacing: 0;
+  }
+
+  /* ---- footer: channel markers + tide-fill dwell bar ---- */
+  .foot { display: flex; flex-direction: column; gap: 10px; }
+  .markers {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .marker {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: clamp(9px, 1.3vh, 12px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0.55;
+    transition: opacity 250ms ease;
+  }
+  .marker .pip {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted);
+    flex: none;
+  }
+  .marker.s-live    .pip { background: var(--ok); }
+  .marker.s-retry   .pip { background: var(--brass); }
+  .marker.s-offline .pip { background: var(--warn); }
+  .marker.s-waiting .pip { background: var(--muted); }
+  .marker.is-active {
+    opacity: 1;
+    color: var(--ink);
+  }
+  .marker.is-active .pip {
+    box-shadow: 0 0 9px 1px var(--brass);
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+  }
+
+  .track {
+    height: 2px;
+    background: var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--ok), var(--brass));
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .fill.run { width: 100%; }     /* duration set inline per-feed */
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fill { width: 100%; opacity: 0.4; transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="screen">
+    <header class="head">
+      <div>
+        <div class="kicker" id="kicker">Bay Conditions</div>
+        <div class="label" id="label">Starting up</div>
+      </div>
+      <div class="status" id="status"><span class="dot"></span><span id="statusText">Connecting</span></div>
+    </header>
+
+    <main class="stage" id="stage">
+      <div class="placeholder" id="placeholder">
+        <span class="big">Warming up the buoys</span>
+        Waiting for the first downloads. Maps appear here as soon as they arrive.
+      </div>
+      <img class="map" id="map" alt="" hidden>
+    </main>
+
+    <footer class="foot">
+      <div class="markers" id="markers"></div>
+      <div class="track"><div class="fill" id="fill"></div></div>
+    </footer>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  var els = {
+    kicker: document.getElementById("kicker"),
+    label: document.getElementById("label"),
+    status: document.getElementById("status"),
+    statusText: document.getElementById("statusText"),
+    stage: document.getElementById("stage"),
+    map: document.getElementById("map"),
+    placeholder: document.getElementById("placeholder"),
+    markers: document.getElementById("markers"),
+    fill: document.getElementById("fill")
+  };
+
+  var feeds = [];
+  var idx = 0;
+  var dwellTimer = null;
+  var reloadMs = 60000;
+  var pageReloadScheduled = false;
+
+  // The Actions runner is UTC, so we never trust a server-baked human time.
+  // Format the ISO success time here, in the Pi's own local zone.
+  function fmtLocal(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    try {
+      return d.toLocaleString(undefined, {
+        month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function updatedWhen(f) {
+    return fmtLocal(f.last_success_iso) || f.updated_human || "recently";
+  }
+
+  // A long-lived kiosk page won't pick up changes to this file's own
+  // markup/CSS/JS until it reloads. Schedule one full reload so design
+  // updates reach the Pi hands-free. Set once, on the first manifest.
+  function schedulePageReload(hours) {
+    if (pageReloadScheduled) return;
+    var h = (typeof hours === "number" && hours > 0) ? hours : 8;
+    pageReloadScheduled = true;
+    setTimeout(function () { location.reload(); }, h * 3600 * 1000);
+  }
+
+  function feedState(f) {
+    if (!f.file && !f.last_success_iso) return "waiting";
+    if (f.stale) return "offline";
+    if (f.ok === false) return "retry";
+    return "live";
+  }
+
+  function statusText(f, state) {
+    if (state === "waiting") return "Waiting for first download";
+    if (state === "offline") return "Source offline · last good " + updatedWhen(f);
+    if (state === "retry")   return "Updated " + updatedWhen(f) + " · reconnecting";
+    return "Updated " + updatedWhen(f);
+  }
+
+  function buildMarkers() {
+    els.markers.innerHTML = "";
+    feeds.forEach(function (f, i) {
+      var m = document.createElement("div");
+      m.className = "marker s-" + feedState(f) + (i === idx ? " is-active" : "");
+      var pip = document.createElement("span");
+      pip.className = "pip";
+      var name = document.createElement("span");
+      name.textContent = f.label || f.id;
+      m.appendChild(pip);
+      m.appendChild(name);
+      els.markers.appendChild(m);
+    });
+  }
+
+  function runDwellBar(seconds) {
+    var fill = els.fill;
+    fill.classList.remove("run");
+    fill.style.transition = "none";
+    fill.style.width = "0%";
+    // force reflow so the reset takes before we animate
+    void fill.offsetWidth;
+    fill.style.transition = "width " + seconds + "s linear";
+    fill.classList.add("run");
+  }
+
+  function showFeed(i) {
+    if (!feeds.length) return;
+    idx = ((i % feeds.length) + feeds.length) % feeds.length;
+    var f = feeds[idx];
+    var state = feedState(f);
+
+    els.kicker.textContent = f.kicker || "Bay Conditions";
+    els.label.textContent = f.label || f.id;
+    els.status.className = "status is-" + state;
+    els.statusText.textContent = statusText(f, state);
+    buildMarkers();
+
+    var dwell = f.dwell_seconds || 12;
+
+    if (f.file) {
+      var src = "images/" + f.file + "?v=" + encodeURIComponent(f.last_success_iso || "0");
+      els.map.classList.add("is-swapping");
+      var loader = new Image();
+      loader.onload = function () {
+        els.map.src = src;
+        els.map.hidden = false;
+        els.placeholder.hidden = true;
+        els.map.classList.remove("is-swapping");
+      };
+      loader.onerror = function () {
+        // file vanished or unreadable: fall back to the card
+        els.map.hidden = true;
+        els.placeholder.hidden = false;
+        els.placeholder.innerHTML =
+          '<span class="big">' + (f.label || f.id) + '</span>Map file unavailable. It will return on the next download.';
+        els.map.classList.remove("is-swapping");
+      };
+      loader.src = src;
+    } else {
+      els.map.hidden = true;
+      els.placeholder.hidden = false;
+      els.placeholder.innerHTML =
+        '<span class="big">' + (f.label || f.id) + '</span>Waiting for first download.';
+    }
+
+    runDwellBar(dwell);
+    clearTimeout(dwellTimer);
+    dwellTimer = setTimeout(function () { showFeed(idx + 1); }, dwell * 1000);
+  }
+
+  function applyManifest(data) {
+    var incoming = (data && data.feeds) || [];
+    if (data && data.manifest_reload_seconds) {
+      reloadMs = data.manifest_reload_seconds * 1000;
+    }
+    schedulePageReload(data && data.page_reload_hours);
+    var firstLoad = feeds.length === 0;
+    // keep showing the same feed across reloads when possible
+    var currentId = feeds.length ? feeds[idx].id : null;
+    feeds = incoming;
+
+    if (!feeds.length) {
+      clearTimeout(dwellTimer);
+      els.map.hidden = true;
+      els.placeholder.hidden = false;
+      els.label.textContent = "No feeds yet";
+      els.kicker.textContent = "Bay Conditions";
+      els.status.className = "status";
+      els.statusText.textContent = "Check the config";
+      els.placeholder.innerHTML =
+        '<span class="big">Warming up the buoys</span>Waiting for the first downloads.';
+      buildMarkers();
+      return;
+    }
+
+    if (firstLoad) {
+      showFeed(0);
+    } else {
+      // refresh labels/markers in place; re-anchor index to the same feed
+      var newIdx = feeds.findIndex(function (f) { return f.id === currentId; });
+      idx = newIdx >= 0 ? newIdx : Math.min(idx, feeds.length - 1);
+      buildMarkers();
+    }
+  }
+
+  function loadManifest() {
+    fetch("manifest.json?cb=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("manifest " + r.status); return r.json(); })
+      .then(applyManifest)
+      .catch(function () { /* keep showing whatever we have; try again next cycle */ })
+      .finally(function () { setTimeout(loadManifest, reloadMs); });
+  }
+
+  loadManifest();
+})();
+</script>
+</body>
+</html>

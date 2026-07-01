@@ -1,0 +1,34 @@
+name: Keepalive
+
+# GitHub auto-disables scheduled workflows after ~60 days with no repo
+# commits. Our deploy uses artifact upload (no commits), so left alone the
+# schedule would eventually pause even while "active". This makes one
+# trivial commit a month to keep the timer alive. (Any real edit you push
+# to config.json / index.html resets it too — this is just insurance.)
+
+on:
+  schedule:
+    - cron: "0 12 1 * *"    # 12:00 UTC on the 1st of each month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Touch keepalive stamp and commit
+        run: |
+          git config user.name "baydash-keepalive[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
+          git add .keepalive
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "chore: keepalive $(date -u +%Y-%m-%d)"
+            git push
+          fi

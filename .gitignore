@@ -1,0 +1,18 @@
+# Generated at deploy time — NEVER commit these (keeps the repo tiny forever)
+build/
+manifest.json
+images/
+
+# Pi kiosk runtime
+.chrome-profile/
+server.log
+fetch.log
+.fetch.lock
+
+# Internal planning doc — not part of the app
+archiecture_handoff.md
+
+# OS cruft
+.DS_Store
+__pycache__/
+*.pyc

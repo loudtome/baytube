@@ -1,0 +1,70 @@
+{
+  "settings": {
+    "manifest_reload_seconds": 60,
+    "page_reload_hours": 8,
+    "request_timeout_seconds": 20,
+    "user_agent": "BayDash/1.0 (GitHub Actions; personal dashboard)",
+    "default_dwell_seconds": 12,
+    "default_stale_after_minutes": 1440
+  },
+
+  "_comment": "Each feed is one card on the display. To add a map, copy a block and fill in url. To remove one, delete its block or set enabled:false. refresh_minutes = how often to re-download. dwell_seconds = how long it shows on screen. stale_after_minutes = how old a file can get before the screen marks the source offline. page_reload_hours = how often the kiosk fully reloads index.html so design/markup changes reach the Pi hands-free.",
+
+  "feeds": [
+    {
+      "id": "nettles",
+      "label": "Sea Nettle Forecast",
+      "kicker": "NOAA NCCOS",
+      "enabled": true,
+      "url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/FullBay/Nettles_Boxes.png",
+      "refresh_minutes": 720,
+      "dwell_seconds": 14,
+      "stale_after_minutes": 2160,
+      "note": "Overview map that works out of the box. To show the full-color daily probability map instead, open the Full Bay forecast page, right-click the map, Copy image address, and paste it here. Seasonal product; expect it offline in winter."
+    },
+    {
+      "id": "radar",
+      "label": "Regional Radar",
+      "kicker": "NWS Wakefield",
+      "enabled": true,
+      "url": "https://radar.weather.gov/ridge/standard/KAKQ_loop.gif",
+      "refresh_minutes": 30,
+      "dwell_seconds": 12,
+      "stale_after_minutes": 120,
+      "note": "Animated loop. KAKQ is the office covering the Northern Neck. refresh_minutes is capped by the workflow's ~30 min cron cadence."
+    },
+    {
+      "id": "tides",
+      "label": "Tide Predictions",
+      "kicker": "NOAA Tides & Currents",
+      "enabled": false,
+      "url": "PASTE_IMAGE_URL_HERE",
+      "refresh_minutes": 720,
+      "dwell_seconds": 12,
+      "stale_after_minutes": 2880,
+      "note": "Open tidesandcurrents.noaa.gov, find your nearest station (e.g. Lewisetta or Windmill Point), open its tide prediction plot, copy the image address into url, then set enabled:true."
+    },
+    {
+      "id": "marine",
+      "label": "Marine Forecast",
+      "kicker": "NWS Wakefield",
+      "enabled": false,
+      "url": "PASTE_IMAGE_URL_HERE",
+      "refresh_minutes": 180,
+      "dwell_seconds": 12,
+      "stale_after_minutes": 720,
+      "note": "From weather.gov/akq marine/briefing graphics. Grab a wind or wave forecast image URL, paste here, set enabled:true."
+    },
+    {
+      "id": "buoy",
+      "label": "Bay Water & Wind",
+      "kicker": "NOAA CBIBS / NDBC",
+      "enabled": false,
+      "url": "PASTE_IMAGE_URL_HERE",
+      "refresh_minutes": 60,
+      "dwell_seconds": 12,
+      "stale_after_minutes": 360,
+      "note": "From buoybay.noaa.gov or an NDBC station plot for a nearby buoy (water temp, wind). Paste the plot image URL, set enabled:true."
+    }
+  ]
+}

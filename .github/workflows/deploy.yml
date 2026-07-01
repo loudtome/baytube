@@ -1,0 +1,72 @@
+name: Fetch feeds and deploy to Pages
+
+# Fetches the maps on a schedule and deploys index.html + config.json +
+# manifest.json + images/ straight to GitHub Pages as an artifact.
+# The fetched data NEVER touches git history — the repo stays tiny.
+
+on:
+  schedule:
+    # every ~30 min (cron is best-effort; real runs often lag a few min)
+    - cron: "*/30 * * * *"
+  push:
+    branches: [main]        # editing the page/config redeploys
+  workflow_dispatch: {}     # manual "Run workflow" button
+
+# No contents:write — we never commit anything.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; don't cancel an in-flight Pages deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Persistence = the live site. Pull the currently-deployed manifest and
+      # images into build/ so fetch_feeds.py's "keep last good copy" logic has
+      # its prior state. No git state, no cache — the deploy IS the store.
+      # Persistence = the live site. Pull the currently-deployed manifest and
+      # images into build/ so fetch_feeds.py's "keep last good copy" logic has
+      # its prior state. No git state, no cache — the deploy IS the store.
+      - name: Seed build/ from the live site (last-good copy)
+        env:
+          BAYDASH_OUTPUT_DIR: build
+        run: |
+          OWNER="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          REPO="${{ github.event.repository.name }}"
+          python3 seed_from_live.py "https://${OWNER}.github.io/${REPO}"
+
+      - name: Fetch feeds
+        env:
+          BAYDASH_OUTPUT_DIR: build
+        run: python3 fetch_feeds.py
+
+      - name: Assemble static files into build/
+        run: |
+          cp index.html build/index.html
+          cp config.json build/config.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
