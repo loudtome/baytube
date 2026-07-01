@@ -215,6 +215,13 @@
   window.addEventListener("mousemove", function once(){ document.body.classList.remove("kiosk"); window.removeEventListener("mousemove", once); });
   document.body.classList.add("kiosk");
 
+  // Stamped at deploy time (sha of index.html). If a later manifest poll
+  // reports a different app_version, this tab is running stale markup —
+  // reload so design/schema changes reach a long-lived kiosk hands-free,
+  // without waiting for the multi-hour backstop reload. The leading-"_"
+  // guard skips the un-substituted placeholder during local dev.
+  var APP_VERSION = "__APP_VERSION__";
+
   var manifest = null, stats = null, tabs = [];
   var idx = 0, autoTimer = null, resumeTimer = null, frameTimer = null, pinned = false;
   var cfg = { tab_seconds:10, resume_after_seconds:60, frame_ms:1000,
@@ -449,6 +456,9 @@
     setTimeout(function(){ location.reload(); }, h*3600*1000);
   }
   function applyManifest(m){
+    if(m.app_version && APP_VERSION.charAt(0)!=="_" && m.app_version!==APP_VERSION){
+      location.reload(); return;   // running stale markup -> refresh
+    }
     manifest=m; applyCfg(m); schedulePageReload();
     var currentId = tabs.length? tabs[idx].id : null;
     var firstLoad = tabs.length===0;

@@ -38,6 +38,11 @@ jobs:
         with:
           python-version: "3.x"
 
+      # Version = hash of index.html. Goes into the manifest AND the deployed
+      # page so a stale kiosk tab can notice it's out of date and self-reload.
+      - name: Compute app version
+        run: echo "BAYDASH_APP_VERSION=$(sha256sum index.html | cut -c1-16)" >> "$GITHUB_ENV"
+
       # Persistence = the live site. Pull the currently-deployed manifest and
       # images into build/ so fetch_feeds.py's "keep last good copy" logic has
       # its prior state. No git state, no cache — the deploy IS the store.
@@ -64,7 +69,7 @@ jobs:
 
       - name: Assemble static files into build/
         run: |
-          cp index.html build/index.html
+          sed "s/__APP_VERSION__/${BAYDASH_APP_VERSION}/" index.html > build/index.html
           cp config.json build/config.json
 
       - name: Upload Pages artifact

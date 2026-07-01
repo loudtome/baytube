@@ -281,6 +281,7 @@ def main():
 
     manifest = {
         "generated": now.isoformat(),
+        "app_version": os.environ.get("BAYDASH_APP_VERSION", ""),
         "manifest_reload_seconds": settings.get("manifest_reload_seconds", 60),
         "stats_reload_seconds": settings.get("stats_reload_seconds", 120),
         "page_reload_hours": settings.get("page_reload_hours", 8),
