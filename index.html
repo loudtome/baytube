@@ -127,6 +127,13 @@
   .stage { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; min-width: 0; }
   .stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px;
                background: #fff; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+  /* animation frames are stacked and cross-cut by opacity (no src swap = no flash) */
+  .stage img.frame { position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+               width: 100%; height: 100%; object-fit: contain; border-radius: 6px;
+               background: transparent; box-shadow: none; opacity: 0; }
+  .stage img.frame.on { opacity: 1; }
+  .stage.loading::after { content: "building the loop…"; color: var(--muted);
+               font-family: var(--mono); font-size: clamp(12px,1.8vh,15px); }
   .framebadge { position: absolute; bottom: 8px; right: 10px; font-family: var(--mono);
                 font-size: 11px; color: var(--muted); background: rgba(7,17,26,0.7);
                 padding: 3px 8px; border-radius: 6px; }
@@ -360,28 +367,42 @@
     img.src="images/"+tab.file+"?v="+encodeURIComponent(tab.last_success_iso||"0");
   }
 
-  /* frames animation shared by wind/waves */
-  var framePool = [];
+  /* frames animation shared by wind/waves.
+     All frames are stacked <img> layers; we decode every one BEFORE the loop
+     starts, then advance by toggling the `.on` opacity class. No src swap
+     during playback -> no white flash on the first pass through. */
+  var frameToken = 0;
   function mountFrames(tab, stage){
     stopFrames();
-    var frames = tab.frames||[];
-    if(!frames.length){ stage.innerHTML='<div class="placeholder">Building the loop…</div>'; return; }
+    var frames = tab.frames || [];
+    if(!frames.length){ stage.innerHTML=''; stage.className='stage'; stage.textContent='Building the loop…'; return; }
     var bust = "?v="+encodeURIComponent(tab.frames_last_success||"0");
-    var img = new Image(); img.decoding="async";
-    stage.innerHTML=""; stage.appendChild(img);
-    var badge=document.createElement("div"); badge.className="framebadge"; stage.appendChild(badge);
-    // preload
-    framePool = frames.map(function(f){ var im=new Image(); im.src="images/"+f+bust; return im; });
-    var i=0;
-    function step(){
-      var src="images/"+frames[i]+bust;
-      img.src=src; badge.textContent=(i+1)+"/"+frames.length;
-      i=(i+1)%frames.length;
-    }
-    step();
-    frameTimer=setInterval(step, cfg.frame_ms);
+    var token = ++frameToken;               // guards against a late decode after tab switch
+    stage.innerHTML=""; stage.className="stage loading";
+    var imgs = frames.map(function(f){
+      var im = document.createElement("img");
+      im.className = "frame"; im.decoding = "async"; im.alt = "";
+      im.src = "images/" + f + bust;
+      stage.appendChild(im);
+      return im;
+    });
+    var badge = document.createElement("div"); badge.className="framebadge"; stage.appendChild(badge);
+
+    function decoded(im){ return im.decode ? im.decode().catch(function(){}) : new Promise(function(res){ im.onload=im.onerror=res; }); }
+    var i = 0;
+    function show(k){ for(var j=0;j<imgs.length;j++) imgs[j].classList.toggle("on", j===k); badge.textContent=(k+1)+"/"+imgs.length; }
+
+    // paint the first frame as soon as it's ready so the tab isn't blank…
+    decoded(imgs[0]).then(function(){ if(token===frameToken){ stage.classList.remove("loading"); show(0); } });
+    // …but only start cycling once ALL frames are decoded and cached.
+    Promise.all(imgs.map(decoded)).then(function(){
+      if(token!==frameToken) return;         // tab changed while we were decoding
+      stage.classList.remove("loading");
+      i = 0; show(0);
+      frameTimer = setInterval(function(){ i=(i+1)%imgs.length; show(i); }, cfg.frame_ms);
+    });
   }
-  function stopFrames(){ if(frameTimer){ clearInterval(frameTimer); frameTimer=null; } framePool=[]; }
+  function stopFrames(){ frameToken++; if(frameTimer){ clearInterval(frameTimer); frameTimer=null; } }
 
   /* ---------------- tab machinery ---------------- */
   function tabStatus(t){
