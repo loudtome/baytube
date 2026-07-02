@@ -320,7 +320,7 @@
     .tidesched .tideitem:nth-child(n+5) { display: none; }
     .tideitem { min-width: 210px; padding: 12px 22px; }
     .tideitem .tt { font-size: 19px; }
-    .tideitem .th { font-size: 82px; line-height: 1; }
+    .tideitem .th { font-size: 82px; line-height: 1; color: #fff; font-weight: 800; }
     .tideitem .tf { font-size: 22px; }
     .windnow .card-dir { font-size: 48px; }
     .windnow .compass { width: 148px; height: 148px; }
@@ -585,10 +585,8 @@
     var td=(stats&&stats.tide)||{};
     var evs = (td.events||[]).slice();
     var now = Date.now();
-    // show the last past event + all upcoming today/tomorrow (cap 6)
-    var future = evs.filter(function(e){ return new Date(e.iso).getTime()>now; });
-    var past = evs.filter(function(e){ return new Date(e.iso).getTime()<=now; });
-    var show = (past.slice(-1)).concat(future).slice(0,6);
+    // show only UPCOMING tides so every time is bright and readable
+    var show = evs.filter(function(e){ return new Date(e.iso).getTime()>now; }).slice(0,6);
     var nextIso = td.next && td.next.iso;
     var items = show.map(function(e){
       var isNext = e.iso===nextIso, isPast = new Date(e.iso).getTime()<=now;
