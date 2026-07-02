@@ -290,6 +290,19 @@
     .wrow .wv { font-size: 30px; }
     .wrow .ww { font-size: 26px; }
     .wrow.whead { font-size: 13px; }
+    /* Wave screen on the kiosk: drop the hero, bars, header AND the graph so
+       the next few forecast numbers can be huge and full-width (~4x). The
+       graph still shows on iPad/desktop (this block is kiosk-only). */
+    .split.waves .big, .split.waves .sub2, .split.waves .graphwrap { display: none; }
+    .split.waves .readout { flex: 1 1 auto; }
+    .split.waves .wtable { margin-top: 0; gap: 6px; }
+    .split.waves .wtable .wrow.whead { display: none; }
+    .split.waves .wtable .wrow .wbar { display: none; }
+    .split.waves .wtable .wrow { grid-template-columns: 2.2em 1fr auto; column-gap: 22px; }
+    .split.waves .wtable .wrow .wt { font-size: 40px; }
+    .split.waves .wtable .wrow .wv { font-size: 112px; }
+    .split.waves .wtable .wrow .ww { font-size: 84px; }
+    .split.waves .wtable .wrow:nth-of-type(n+5) { display: none; } /* header(hidden)+3 rows */
     /* tide times: larger */
     .tideitem { min-width: 132px; }
     .tideitem .tt { font-size: 15px; }
