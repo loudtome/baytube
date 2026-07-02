@@ -73,6 +73,7 @@
       "type": "frames",
       "kicker": "NOAA NCCOS · Rappahannock / York",
       "dwell_seconds": 14,
+      "layout": "sidebyside",
       "frames": {
         "page_url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/Config_Files/config-seanettles-rappahannockriver.txt",
         "frame_base": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/Box6_RappahannockRiver/",

@@ -183,6 +183,17 @@
   .graphwrap { flex: 1; min-width: 0; min-height: 0; display: flex; align-items: center;
                justify-content: center; padding-left: clamp(6px,1.4vw,18px); }
   @media (orientation: portrait) { .graphwrap { padding-left: 0; padding-bottom: 6px; } }
+  /* waves = graph only (hero + full-width line graph, no table) */
+  .graphonly { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; gap: 6px; }
+  .graphonly .ghead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .graphonly .graphwrap { padding-left: 0; }
+  /* frames shown side by side (nettles today | tomorrow) */
+  .framesrow { flex: 1; display: flex; gap: clamp(8px,1.6vw,22px); align-items: center;
+               justify-content: center; min-height: 0; min-width: 0; }
+  .framesrow .cell { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .framesrow .cell img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px;
+                         background: #fff; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+  @media (orientation: portrait) { .framesrow { flex-direction: column; } }
   .chart { width: 100%; height: 100%; }
   .chart .gl { stroke: rgba(173,201,214,0.12); stroke-width: 1; vector-effect: non-scaling-stroke; }
   .chart .ax { fill: var(--muted); font-family: var(--mono); font-size: 12px; }
@@ -276,38 +287,28 @@
     .big .n { font-size: 92px; }
     .big .u { font-size: 30px; }
     .big .lbl { font-size: 17px; }
-    /* Now-screen cards: larger */
-    .card { padding: 14px 18px; }
-    .card .lbl { font-size: 18px; }
-    .card .v { font-size: 58px; }
-    .card .v small { font-size: 0.4em; }
-    .card .x { font-size: 20px; }
+    /* Now-screen cards: much larger (several-fold); keep the secondary line to
+       one row so the big values fit without overlapping */
+    .grid { gap: 10px; }
+    .card { padding: 8px 16px; gap: 2px; overflow: hidden; }
+    .card .lbl { font-size: 20px; }
+    .card .v { font-size: 84px; line-height: 1; }
+    .card .v small { font-size: 0.32em; }
+    .card .x { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .sub2 { font-size: 19px; }
-    /* forecast tables: give the table more width and make the
-       right-hand wave (ft) and wind (kt) numbers much larger */
-    .split.waves .readout, .split.wind .readout { flex-basis: clamp(300px, 48%, 500px); }
+    /* wind forecast table (waves tab has no table now) */
+    .split.wind .readout { flex-basis: clamp(300px, 48%, 500px); }
     .wrow { font-size: 22px; grid-template-columns: 3.2em minmax(18px,1fr) auto auto; column-gap: 12px; }
     .wrow .wv { font-size: 30px; }
     .wrow .ww { font-size: 26px; }
     .wrow.whead { font-size: 13px; }
-    /* Wave screen on the kiosk: drop the hero, bars, header AND the graph so
-       the next few forecast numbers can be huge and full-width (~4x). The
-       graph still shows on iPad/desktop (this block is kiosk-only). */
-    .split.waves .big, .split.waves .sub2, .split.waves .graphwrap { display: none; }
-    .split.waves .readout { flex: 1 1 auto; }
-    .split.waves .wtable { margin-top: 0; gap: 6px; }
-    .split.waves .wtable .wrow.whead { display: none; }
-    .split.waves .wtable .wrow .wbar { display: none; }
-    .split.waves .wtable .wrow { grid-template-columns: 2.2em 1fr auto; column-gap: 22px; }
-    .split.waves .wtable .wrow .wt { font-size: 40px; }
-    .split.waves .wtable .wrow .wv { font-size: 112px; }
-    .split.waves .wtable .wrow .ww { font-size: 84px; }
-    .split.waves .wtable .wrow:nth-of-type(n+5) { display: none; } /* header(hidden)+3 rows */
-    /* tide times: larger */
-    .tideitem { min-width: 132px; }
-    .tideitem .tt { font-size: 15px; }
-    .tideitem .th { font-size: 34px; }
-    .tideitem .tf { font-size: 17px; }
+    /* waves graph-only: keep a compact hero, let the graph fill */
+    .graphonly .big .n { font-size: 60px; }
+    /* tide times: much larger */
+    .tideitem { min-width: 158px; }
+    .tideitem .tt { font-size: 16px; }
+    .tideitem .th { font-size: 56px; }
+    .tideitem .tf { font-size: 20px; }
     .windnow .card-dir { font-size: 48px; }
     .windnow .compass { width: 148px; height: 148px; }
     .placeholder { font-size: 20px; }
@@ -539,32 +540,29 @@
       + '<div class="graphwrap">'+lineChart(fc,{key:"kt",unit:"kt",dirKey:"dir_deg"})+'</div></div>';
   }
 
-  function renderWaves(tab){
+  function renderWaves(){
     var wv=(stats&&stats.waves)||{};
     var fc=wv.forecast||[];
     var maxft=0; fc.forEach(function(f){ if(f.ft>maxft) maxft=f.ft; });
-    var scale = maxft>0?maxft:1;
-    var rows = fc.map(function(f,i){
-      var w=Math.max(4, Math.round(f.ft/scale*100));
-      var wind="—";
-      if(f.wind_kt!=null){
-        var arr = f.wind_dir_deg!=null
-          ? '<span class="warr" style="transform:rotate('+f.wind_dir_deg+'deg)">↑</span>' : '';
-        wind = arr + f.wind_kt + ' kt';
-      }
-      return '<div class="wrow'+(i===0?" now":"")+'"><span class="wt">'+(i===0?"now":fmtDayTime(f.iso))+'</span>'
-        + '<span class="wbar"><i style="width:'+w+'%"></i></span>'
-        + '<span class="wv">'+f.ft+' ft</span>'
-        + '<span class="ww">'+wind+'</span></div>';
+    els.view.innerHTML =
+      '<div class="graphonly">'
+      + '<div class="ghead"><div class="big"><div class="lbl">Wave height now</div>'
+      +   '<span class="n">'+num(wv.height_ft)+'</span><span class="u"> ft</span></div>'
+      +   (maxft>0?'<div class="sub2">peak '+maxft+' ft next 48h</div>':'')
+      + '</div>'
+      + '<div class="graphwrap">'+lineChart(fc,{key:"ft",unit:"ft"})+'</div>'
+      + '</div>';
+  }
+
+  // frames laid out side by side (static), used for the nettles today|tomorrow maps
+  function renderFramesRow(tab){
+    var frames=tab.frames||[];
+    if(!frames.length){ els.view.innerHTML='<div class="framesrow"><div class="placeholder">Waiting for maps…</div></div>'; return; }
+    var bust="?v="+encodeURIComponent(tab.frames_last_success||"0");
+    var cells=frames.map(function(f){
+      return '<div class="cell"><img src="images/'+f+bust+'" alt=""></div>';
     }).join("");
-    var head = '<div class="wrow whead"><span class="wt">time</span><span></span>'
-      + '<span class="wv">wave</span><span class="ww">wind</span></div>';
-    var readout = '<div class="big"><div class="lbl">Significant wave height</div>'
-      + '<span class="n">'+num(wv.height_ft)+'</span><span class="u">ft</span></div>'
-      + '<div class="sub2">'+(maxft>0?("peak "+maxft+" ft next 48h"):"forecast")+'</div>'
-      + '<div class="wtable">'+(rows?head+rows:'<div class="dim">No forecast yet.</div>')+'</div>';
-    els.view.innerHTML = '<div class="split waves"><div class="readout">'+readout+'</div>'
-      + '<div class="graphwrap">'+lineChart(fc,{key:"ft",unit:"ft"})+'</div></div>';
+    els.view.innerHTML='<div class="framesrow">'+cells+'</div>';
   }
 
   function renderTides(){
@@ -682,7 +680,10 @@
       case "waves":    renderWaves(t); break;
       case "tides":    renderTides(); break;
       case "image":    renderImage(t); break;
-      default:         if(t.frames) mountInto(t); else renderOverview();
+      default:
+        if(t.frames && t.layout==="sidebyside") renderFramesRow(t);
+        else if(t.frames) mountInto(t);
+        else renderOverview();
     }
     markActiveRail();
     scheduleNext();

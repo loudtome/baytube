@@ -205,6 +205,7 @@ def process_frames(tab, settings, prev, now):
         "id": tab["id"], "label": tab.get("label", tab["id"]),
         "type": tab.get("type", "frames"), "kicker": tab.get("kicker", ""),
         "note": spec.get("note", tab.get("note", "")),
+        "layout": tab.get("layout"),
         "dwell_seconds": tab.get("dwell_seconds", settings.get("default_dwell_seconds", 12)),
     }
     stale_after = spec.get("stale_after_minutes", settings.get("default_stale_after_minutes", 1440))
