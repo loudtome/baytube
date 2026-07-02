@@ -283,10 +283,12 @@
     .card .v small { font-size: 0.4em; }
     .card .x { font-size: 20px; }
     .sub2 { font-size: 19px; }
-    /* forecast tables: bigger, wave/wind numbers largest */
-    .wrow { font-size: 20px; }
-    .wrow .wv { font-size: 23px; }
-    .wrow .ww { font-size: 19px; }
+    /* forecast tables: give the table more width and make the
+       right-hand wave (ft) and wind (kt) numbers much larger */
+    .split.waves .readout, .split.wind .readout { flex-basis: clamp(300px, 48%, 500px); }
+    .wrow { font-size: 22px; grid-template-columns: 3.2em minmax(18px,1fr) auto auto; column-gap: 12px; }
+    .wrow .wv { font-size: 30px; }
+    .wrow .ww { font-size: 26px; }
     .wrow.whead { font-size: 13px; }
     /* tide times: larger */
     .tideitem { min-width: 132px; }
