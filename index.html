@@ -211,6 +211,24 @@
   .tideitem .th { font-size: clamp(18px,2.6vh,26px); font-weight:700; }
   .tideitem .tf { font-size: clamp(11px,1.5vh,13px); color:var(--muted); }
 
+  /* decorative sailboat */
+  .boatwrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding-top: 6px; }
+  .boat { width: auto; height: 100%; max-height: 38vh; max-width: 90%; opacity: 0.92; }
+  .boat .hull { fill: #12303f; stroke: rgba(173,201,214,0.35); stroke-width: 2; }
+  .boat .mast { stroke: rgba(233,238,240,0.7); stroke-width: 2.5; }
+  .boat .sail { fill: rgba(224,168,94,0.92); }
+  .boat .jib  { fill: rgba(233,238,240,0.85); }
+  .boat .wave { fill: none; stroke: rgba(111,182,164,0.55); stroke-width: 3; stroke-linecap: round; }
+  .boat .flag { fill: var(--warn); }
+  /* faint seascape watermark behind the overview grid */
+  .seascape { position: absolute; right: clamp(10px,3vw,40px); bottom: clamp(6px,2vh,26px);
+              width: min(46vh, 40vw); pointer-events: none; opacity: 0.10; z-index: 0; }
+  .seascape .sail, .seascape .jib { fill: var(--ink); }
+  .seascape .hull { fill: var(--ink); stroke: none; }
+  .seascape .mast { stroke: var(--ink); }
+  .seascape .wave { stroke: var(--ink); }
+  .grid { position: relative; z-index: 1; }
+
   .placeholder { color: var(--muted); font-family: var(--mono); text-align:center; margin:auto;
                  font-size: clamp(13px,2vh,17px); line-height:1.5; max-width: 34ch; }
   .dim { color: var(--muted); }
@@ -304,12 +322,25 @@
       + '</g></svg>';
   }
 
+  /* ---------------- sailboat (inline svg, no external asset) ---------------- */
+  function boatSVG(cls){
+    return '<svg class="boat '+(cls||"")+'" viewBox="0 0 240 210" preserveAspectRatio="xMidYMax meet" aria-hidden="true">'
+      + '<line class="mast" x1="120" y1="14" x2="120" y2="150"/>'
+      + '<path class="flag" d="M120 16 L150 24 L120 32 Z"/>'
+      + '<path class="jib"  d="M114 40 C 92 78, 84 116, 92 150 L114 150 Z"/>'
+      + '<path class="sail" d="M126 30 C 160 74, 168 118, 156 150 L126 150 Z"/>'
+      + '<path class="hull" d="M52 152 L188 152 C 180 178, 160 188, 120 188 C 80 188, 60 178, 52 152 Z"/>'
+      + '<path class="wave" d="M14 178 q 22 -11 44 0 t 44 0 t 44 0 t 44 0 t 44 0"/>'
+      + '<path class="wave" d="M6 194 q 22 -11 44 0 t 44 0 t 44 0 t 44 0 t 44 0"/>'
+      + '</svg>';
+  }
+
   /* ---------------- views ---------------- */
   function tabById(id){ for(var i=0;i<tabs.length;i++) if(tabs[i].id===id) return tabs[i]; return null; }
 
   function renderOverview(){
     var w=(stats&&stats.wind)||{}, wv=(stats&&stats.waves)||{}, wt=(stats&&stats.water)||{},
-        td=(stats&&stats.tide)||{}, sc=(stats&&stats.sca)||{status:"unknown"};
+        air=(stats&&stats.air)||{}, td=(stats&&stats.tide)||{}, sc=(stats&&stats.sca)||{status:"unknown"};
     var next = td.next;
     var tideLine = td.state ? (cap(td.state) + (next? " · "+(next.type==="H"?"high":"low")+" "+fmtClock(next.iso):"")) : "—";
     var scaTxt = sc.status==="active"?"In effect": sc.status==="expected"?"Expected": sc.status==="none"?"None":"—";
@@ -321,10 +352,10 @@
              (w.gust_kt!=null?("gusts "+w.gust_kt+" kt · "):"")+ (arrow? "from "+(w.dir_cardinal||""):"") )
       + card("", "Wave Height", num(wv.height_ft)+'<small> ft</small>', "significant, forecast")
       + card("", "Water Temp", num(wt.temp_f)+'<small> °F</small>', wt.obs_iso?fmtAgo(wt.obs_iso):"")
+      + card("", "Air Temp", num(air.temp_f)+'<small> °F</small>', air.obs_iso?fmtAgo(air.obs_iso):(air.source||""))
       + card("", "Tide", num(td.now_ft)+'<small> ft</small>', tideLine)
-      + card("", "Location", (manifest&&manifest.location)||"—", "near Kilmarnock, VA")
       + '</div>';
-    els.view.innerHTML = html;
+    els.view.innerHTML = boatSVG("seascape") + html;
   }
   function card(cls,label,value,extra){
     return '<div class="card '+cls+'"><div class="lbl">'+label+'</div><div class="v">'+value+'</div>'
@@ -397,7 +428,8 @@
       + '<div class="tidenow"><div class="big"><div class="lbl">Now · '+stateTxt+'</div>'
       +   '<span class="n">'+num(td.now_ft)+'</span><span class="u">ft</span></div>'
       +   '<div class="sub2">'+(td.obs_iso?("as of "+fmtClock(td.obs_iso)):"")+'</div></div>'
-      + '<div class="tidesched">'+(items||'<div class="placeholder">No tide data.</div>')+'</div></div>';
+      + '<div class="tidesched">'+(items||'<div class="placeholder">No tide data.</div>')+'</div>'
+      + '<div class="boatwrap">'+boatSVG("")+'</div></div>';
   }
 
   function renderImage(tab){

@@ -178,6 +178,7 @@ def get_gridpoint(url, ua, timeout):
     spd_s = series("windSpeed")
     dir_s = series("windDirection")
     gst_s = series("windGust")
+    temp_s = series("temperature")  # air temp, Celsius (fallback for the buoy)
 
     def at(series_vals, t):
         """Value of the step-function at time t (last point at or before t)."""
@@ -214,6 +215,7 @@ def get_gridpoint(url, ua, timeout):
     wind_fc = [{"iso": t.isoformat(), "kt": kmh_to_kt(v)}
                for t, v in spd_s if now <= t <= horizon][:9]
 
+    air_now = current(temp_s)
     return {
         "wave_ft": m_to_ft(wave_now) if wave_now is not None else None,
         "wave_forecast": wave_fc,
@@ -221,6 +223,7 @@ def get_gridpoint(url, ua, timeout):
         "wind_dir_deg": round(dir_now) if dir_now is not None else None,
         "wind_gust_kt": kmh_to_kt(gst_now) if gst_now is not None else None,
         "wind_forecast": wind_fc,
+        "air_f": c_to_f(air_now) if air_now is not None else None,
     }
 
 
@@ -263,6 +266,7 @@ def get_buoy(station, ua, timeout):
         "wind_gust_kt": ms_to_kt(gst) if gst is not None else None,
         "wind_dir_deg": round(wdir) if wdir is not None else None,
         "water_temp_f": c_to_f(wtmp) if wtmp is not None else None,
+        "air_temp_f": c_to_f(num("ATMP")) if num("ATMP") is not None else None,
         "obs_iso": obs_iso,
     }
 
@@ -351,6 +355,11 @@ def main():
         "source": "NWS forecast",
     }
     stats["water"] = {"temp_f": buoy.get("water_temp_f"), "obs_iso": buoy.get("obs_iso")}
+    stats["air"] = {
+        "temp_f": buoy.get("air_temp_f") if buoy.get("air_temp_f") is not None else grid.get("air_f"),
+        "obs_iso": buoy.get("obs_iso") if buoy.get("air_temp_f") is not None else None,
+        "source": "buoy 44058" if buoy.get("air_temp_f") is not None else "NWS forecast",
+    }
     stats["tide"] = run("tide", lambda: get_tides(src["tide_station"], ua, timeout))
     stats["sca"] = run("sca", lambda: get_sca(src["marine_zones"], ua, timeout))
 
