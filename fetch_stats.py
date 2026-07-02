@@ -212,8 +212,21 @@ def get_gridpoint(url, ua, timeout):
     spd_now = current(spd_s)
     dir_now = current(dir_s)
     gst_now = current(gst_s)
-    wind_fc = [{"iso": t.isoformat(), "kt": kmh_to_kt(v)}
-               for t, v in spd_s if now <= t <= horizon][:9]
+    # regular 3-hourly wind forecast (48h) for the wind table
+    wind_fc = []
+    for h in range(0, 49, 3):
+        t = base_t + timedelta(hours=h)
+        ws = at(spd_s, t)
+        if ws is None:
+            continue
+        wd = at(dir_s, t)
+        wg = at(gst_s, t)
+        wind_fc.append({
+            "iso": t.isoformat(),
+            "kt": kmh_to_kt(ws),
+            "dir_deg": round(wd) if wd is not None else None,
+            "gust_kt": kmh_to_kt(wg) if wg is not None else None,
+        })
 
     air_now = current(temp_s)
     return {
@@ -337,15 +350,26 @@ def main():
     grid = {} if not isinstance(grid, dict) else grid
     buoy = {} if not isinstance(buoy, dict) else buoy
 
-    # Wind: prefer live buoy obs; fall back to gridpoint nowcast.
-    wind = {
-        "speed_kt": buoy.get("wind_kt") if buoy.get("wind_kt") is not None else grid.get("wind_kt"),
-        "gust_kt": buoy.get("wind_gust_kt") if buoy.get("wind_gust_kt") is not None else grid.get("wind_gust_kt"),
-        "dir_deg": buoy.get("wind_dir_deg") if buoy.get("wind_dir_deg") is not None else grid.get("wind_dir_deg"),
-        "source": "buoy 44058" if buoy.get("wind_kt") is not None else "NWS forecast",
-        "obs_iso": buoy.get("obs_iso"),
-        "forecast": grid.get("wind_forecast", []),
-    }
+    # Wind: prefer the live buoy, but only if its reading is RECENT (the buoy
+    # reports intermittently). If it's stale, use the NWS nowcast so the big
+    # "now" number is actually current, not hours/days old.
+    buoy_obs = parse_iso(buoy.get("obs_iso"))
+    buoy_fresh = (buoy_obs is not None
+                  and (now_utc() - buoy_obs).total_seconds() <= 3 * 3600
+                  and buoy.get("wind_kt") is not None)
+    if buoy_fresh:
+        wind = {
+            "speed_kt": buoy.get("wind_kt"), "gust_kt": buoy.get("wind_gust_kt"),
+            "dir_deg": buoy.get("wind_dir_deg"), "source": "buoy 44058",
+            "obs_iso": buoy.get("obs_iso"),
+        }
+    else:
+        wind = {
+            "speed_kt": grid.get("wind_kt"), "gust_kt": grid.get("wind_gust_kt"),
+            "dir_deg": grid.get("wind_dir_deg"), "source": "NWS nowcast",
+            "obs_iso": now_utc().isoformat(),
+        }
+    wind["forecast"] = grid.get("wind_forecast", [])
     wind["dir_cardinal"] = cardinal(wind["dir_deg"])
     stats["wind"] = wind
 

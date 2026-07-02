@@ -178,10 +178,15 @@
   .card.sca-card.none { border-color: rgba(95,174,142,0.4); }
   .card .arrowmini { display:inline-block; transition: transform 600ms ease; }
 
-  /* wave forecast table */
-  .split.waves .readout { flex: 0 0 clamp(240px, 36%, 380px); flex-direction: column;
+  /* wave / wind forecast table */
+  .split.waves .readout, .split.wind .readout {
+                          flex: 0 0 clamp(240px, 36%, 380px); flex-direction: column;
                           align-items: stretch; justify-content: flex-start; }
-  @media (orientation: portrait) { .split.waves .readout { flex: 0 0 auto; } }
+  @media (orientation: portrait) {
+    .split.waves .readout, .split.wind .readout { flex: 0 0 auto; } }
+  .windnow { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+  .windnow .compass { width: clamp(90px,14vh,140px); height: clamp(90px,14vh,140px); }
+  .windnow .card-dir { font-size: clamp(26px,6vh,52px); font-weight: 700; line-height: 1; }
   .wtable { display: flex; flex-direction: column; gap: 4px; margin-top: clamp(8px,1.5vh,14px);
             min-height: 0; overflow: auto; font-variant-numeric: tabular-nums; }
   .wrow { display: grid; grid-template-columns: 3.4em 1fr 2.8em 4.4em; align-items: center; gap: 9px;
@@ -286,6 +291,7 @@
     if(m<1) return "just now"; if(m<60) return m+" min ago";
     var h=Math.round(m/60); if(h<24) return h+"h ago"; return Math.round(h/24)+"d ago"; }
   function num(v,d){ return (v===null||v===undefined||isNaN(v)) ? (d===undefined?"—":d) : v; }
+  function cardinalOf(deg){ return (deg==null)?"":CARD[Math.round(deg/22.5)%16]; }
 
   /* ---------------- SCA banner ---------------- */
   function renderSCA(){
@@ -365,14 +371,29 @@
 
   function renderWind(tab){
     var w=(stats&&stats.wind)||{};
-    var readout = '<div>'
-      + '<div class="big"><div class="lbl">Wind speed</div><span class="n">'+num(w.speed_kt)+'</span><span class="u">kt</span></div>'
-      + '<div class="sub2">'+(w.gust_kt!=null?("gusts "+w.gust_kt+" kt"):"")+(w.obs_iso?(" · "+fmtAgo(w.obs_iso)):"")+'</div>'
-      + '</div>'
-      + '<div style="display:flex;align-items:center;gap:14px">'+compassSVG(w.dir_deg)
-      + '<div><div class="big"><span class="n" style="font-size:clamp(30px,7vh,64px)">'+(w.dir_cardinal||"—")+'</span></div>'
-      + '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>';
-    els.view.innerHTML = '<div class="split"><div class="readout">'+readout+'</div>'
+    var fc=w.forecast||[];
+    var maxkt=0; fc.forEach(function(f){ if(f.kt>maxkt) maxkt=f.kt; });
+    var scale=maxkt>0?maxkt:1;
+    var rows=fc.map(function(f,i){
+      var bw=Math.max(4,Math.round(f.kt/scale*100));
+      var dir = f.dir_deg!=null
+        ? '<span class="warr" style="transform:rotate('+f.dir_deg+'deg)">↑</span>'+cardinalOf(f.dir_deg) : '—';
+      return '<div class="wrow'+(i===0?" now":"")+'"><span class="wt">'+(i===0?"now":fmtDayTime(f.iso))+'</span>'
+        + '<span class="wbar"><i style="width:'+bw+'%"></i></span>'
+        + '<span class="wv">'+f.kt+' kt</span>'
+        + '<span class="ww">'+dir+'</span></div>';
+    }).join("");
+    var head = '<div class="wrow whead"><span class="wt">time</span><span></span>'
+      + '<span class="wv">wind</span><span class="ww">dir</span></div>';
+    var readout = '<div class="big"><div class="lbl">Wind speed now</div>'
+      + '<span class="n">'+num(w.speed_kt)+'</span><span class="u">kt</span></div>'
+      + '<div class="sub2">'+(w.gust_kt!=null?("gusts "+w.gust_kt+" kt"):"")
+      +   (w.obs_iso?(" · "+fmtAgo(w.obs_iso)):"")+(w.source?(" · "+w.source):"")+'</div>'
+      + '<div class="windnow">'+compassSVG(w.dir_deg)
+      +   '<div><div class="card-dir">'+(w.dir_cardinal||cardinalOf(w.dir_deg)||"—")+'</div>'
+      +   '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>'
+      + '<div class="wtable">'+(rows?head+rows:'<div class="dim">No forecast yet.</div>')+'</div>';
+    els.view.innerHTML = '<div class="split wind"><div class="readout">'+readout+'</div>'
       + '<div class="stage" id="stage"></div></div>';
     mountFrames(tab, $("stage"));
   }
