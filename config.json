@@ -90,13 +90,19 @@
     {
       "id": "nettles",
       "label": "Sea Nettles",
-      "type": "image",
-      "kicker": "NOAA NCCOS",
-      "url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/FullBay/Nettles_Boxes.png",
-      "refresh_minutes": 720,
+      "type": "frames",
+      "kicker": "NOAA NCCOS · Rappahannock / York",
       "dwell_seconds": 14,
-      "stale_after_minutes": 2160,
-      "note": "Sea nettle probability, Full Bay. Seasonal; expect it offline in winter."
+      "frames": {
+        "page_url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/Config_Files/config-seanettles-rappahannockriver.txt",
+        "frame_base": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/Box6_RappahannockRiver/",
+        "frame_regex": "image(\\d+)\\.png",
+        "frame_take": "first",
+        "max_frames": 8,
+        "refresh_minutes": 720,
+        "stale_after_minutes": 2160,
+        "note": "NCCOS sea nettle probability, Rappahannock/York region (Box 6). 8-day daily-forecast animation. Seasonal; expect it offline in winter."
+      }
     }
   ]
 }
