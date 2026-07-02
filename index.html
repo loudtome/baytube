@@ -190,8 +190,11 @@
   /* frames shown side by side (nettles today | tomorrow) */
   .framesrow { flex: 1; display: flex; gap: clamp(8px,1.6vw,22px); align-items: center;
                justify-content: center; min-height: 0; min-width: 0; }
-  .framesrow .cell { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
-  .framesrow .cell img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px;
+  .framesrow .cell { flex: 1 1 0; min-width: 0; min-height: 0; height: 100%; display: flex;
+                     flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+  .framesrow .framecap { font-weight: 600; font-size: clamp(15px,2.2vh,22px); color: var(--ink);
+                         letter-spacing: 0.03em; flex: none; }
+  .framesrow .cell img { max-width: 100%; min-height: 0; flex: 1 1 auto; object-fit: contain; border-radius: 6px;
                          background: #fff; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
   @media (orientation: portrait) { .framesrow { flex-direction: column; } }
   .chart { width: 100%; height: 100%; }
@@ -304,6 +307,14 @@
     .wrow.whead { font-size: 13px; }
     /* waves graph-only: keep a compact hero, let the graph fill */
     .graphonly .big .n { font-size: 60px; }
+    /* map tabs (radar / sea nettles): trim the header + padding so the
+       map(s) use nearly the whole screen */
+    body[data-tab="image"] .head, body[data-tab="frames"] .head { padding: 4px 14px 0; }
+    body[data-tab="image"] .head .title, body[data-tab="frames"] .head .title { font-size: 20px; }
+    body[data-tab="image"] .head .kicker, body[data-tab="frames"] .head .kicker { font-size: 12px; }
+    body[data-tab="image"] .view, body[data-tab="frames"] .view { padding: 4px 8px 6px; }
+    .framesrow { gap: 8px; }
+    .framesrow .framecap { font-size: 24px; }
     /* tide times: very large — show the next 4 and make the times dominant */
     .tidesched { gap: 12px; }
     .tidesched .tideitem:nth-child(n+5) { display: none; }
@@ -561,8 +572,11 @@
     var frames=tab.frames||[];
     if(!frames.length){ els.view.innerHTML='<div class="framesrow"><div class="placeholder">Waiting for maps…</div></div>'; return; }
     var bust="?v="+encodeURIComponent(tab.frames_last_success||"0");
-    var cells=frames.map(function(f){
-      return '<div class="cell"><img src="images/'+f+bust+'" alt=""></div>';
+    var caps=["Today","Tomorrow"];
+    var cells=frames.map(function(f,i){
+      var cap=caps[i]||("Day +"+i);
+      return '<div class="cell"><div class="framecap">'+cap+'</div>'
+        + '<img src="images/'+f+bust+'" alt="'+cap+'"></div>';
     }).join("");
     els.view.innerHTML='<div class="framesrow">'+cells+'</div>';
   }
@@ -672,6 +686,7 @@
     if(!tabs.length) return;
     idx=((i%tabs.length)+tabs.length)%tabs.length;
     var t=tabs[idx];
+    document.body.setAttribute("data-tab", t.type||"");
     els.kicker.textContent=t.kicker||((manifest&&manifest.location)||"Bay Conditions");
     els.title.textContent=t.label||t.id;
     els.stamp.textContent = stats&&stats.generated? "updated "+fmtAgo(stats.generated) : "";
