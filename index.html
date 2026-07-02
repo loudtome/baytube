@@ -257,6 +257,42 @@
                  font-size: clamp(13px,2vh,17px); line-height:1.5; max-width: 34ch; }
   .dim { color: var(--muted); }
   .hide { display: none !important; }
+
+  /* Small landscape panels (the 7" Pi kiosk). On a short screen the clamp()
+     font sizes bottom out at their minimums and read tiny on a physical 7"
+     display, so scale text + key UI up. iPad landscape (height >= 768) and
+     portrait are unaffected. Tunable: raise/lower the max-height if a
+     particular panel isn't caught. */
+  @media (orientation: landscape) and (max-height: 760px) {
+    .sca { font-size: 23px; padding: 12px 26px; }
+    .tab { font-size: 20px; padding: 15px 16px; }
+    .tab .pip { width: 11px; height: 11px; }
+    .head { padding-top: 12px; }
+    .head .title { font-size: 32px; }
+    .head .kicker { font-size: 15px; }
+    .head .stamp { font-size: 16px; }
+    .big .n { font-size: 88px; }
+    .big .u { font-size: 30px; }
+    .big .lbl { font-size: 16px; }
+    .card .lbl { font-size: 16px; }
+    .card .v { font-size: 46px; }
+    .card .x { font-size: 18px; }
+    .sub2 { font-size: 18px; }
+    .wrow { font-size: 17px; }
+    .wrow.whead { font-size: 13px; }
+    .tideitem { min-width: 120px; }
+    .tideitem .tt { font-size: 14px; }
+    .tideitem .th { font-size: 28px; }
+    .tideitem .tf { font-size: 16px; }
+    .windnow .card-dir { font-size: 48px; }
+    .windnow .compass { width: 150px; height: 150px; }
+    .placeholder { font-size: 19px; }
+    .framebadge { font-size: 15px; }
+    /* svg text lives in viewBox units */
+    .chart .ax { font-size: 16px; }
+    .chart .dlab { font-size: 16px; }
+    .compass text { font-size: 15px; }
+  }
 </style>
 </head>
 <body>
