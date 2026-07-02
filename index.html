@@ -178,6 +178,22 @@
   .card.sca-card.none { border-color: rgba(95,174,142,0.4); }
   .card .arrowmini { display:inline-block; transition: transform 600ms ease; }
 
+  /* wave forecast table */
+  .split.waves .readout { flex: 0 0 clamp(240px, 36%, 380px); flex-direction: column;
+                          align-items: stretch; justify-content: flex-start; }
+  @media (orientation: portrait) { .split.waves .readout { flex: 0 0 auto; } }
+  .wtable { display: flex; flex-direction: column; gap: 5px; margin-top: clamp(10px,1.8vh,18px);
+            min-height: 0; overflow: auto; font-variant-numeric: tabular-nums; }
+  .wrow { display: grid; grid-template-columns: 3.6em 1fr 3.2em; align-items: center; gap: 10px;
+          font-size: clamp(11px,1.7vh,14px); }
+  .wrow .wt { color: var(--muted); font-family: var(--mono); white-space: nowrap; }
+  .wrow .wbar { height: 9px; border-radius: 5px; background: var(--panel-2); overflow: hidden; }
+  .wrow .wbar > i { display: block; height: 100%; border-radius: 5px;
+                    background: linear-gradient(90deg, var(--ok), var(--brass)); }
+  .wrow .wv { text-align: right; font-weight: 600; white-space: nowrap; }
+  .wrow.now .wt, .wrow.now .wv { color: var(--ink); }
+  .wrow.now .wbar { box-shadow: inset 0 0 0 1px rgba(224,168,94,0.4); }
+
   /* tides */
   .tidewrap { display:flex; flex-direction:column; gap: clamp(10px,2vh,18px); flex:1; min-height:0; }
   .tidenow { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
@@ -238,6 +254,10 @@
 
   function fmtClock(iso){ if(!iso) return "—"; var d=new Date(iso); if(isNaN(d)) return "—";
     return d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
+  function fmtDayTime(iso){ var d=new Date(iso); if(isNaN(d)) return "—";
+    var t=d.toLocaleTimeString(undefined,{hour:"numeric"});
+    if(d.toDateString()===new Date().toDateString()) return t;
+    return d.toLocaleDateString(undefined,{weekday:"short"})+" "+t; }
   function fmtAgo(iso){ if(!iso) return ""; var d=new Date(iso); if(isNaN(d)) return "";
     var m=Math.round((Date.now()-d.getTime())/60000);
     if(m<1) return "just now"; if(m<60) return m+" min ago";
@@ -323,11 +343,20 @@
 
   function renderWaves(tab){
     var wv=(stats&&stats.waves)||{};
-    var peak=null; (wv.forecast||[]).forEach(function(f){ if(peak==null||f.ft>peak) peak=f.ft; });
+    var fc=wv.forecast||[];
+    var maxft=0; fc.forEach(function(f){ if(f.ft>maxft) maxft=f.ft; });
+    var scale = maxft>0?maxft:1;
+    var rows = fc.map(function(f,i){
+      var w=Math.max(4, Math.round(f.ft/scale*100));
+      return '<div class="wrow'+(i===0?" now":"")+'"><span class="wt">'+(i===0?"now":fmtDayTime(f.iso))+'</span>'
+        + '<span class="wbar"><i style="width:'+w+'%"></i></span>'
+        + '<span class="wv">'+f.ft+' ft</span></div>';
+    }).join("");
     var readout = '<div class="big"><div class="lbl">Significant wave height</div>'
       + '<span class="n">'+num(wv.height_ft)+'</span><span class="u">ft</span></div>'
-      + '<div class="sub2">'+(peak!=null?("peak "+peak+" ft next 24h"):"forecast")+'</div>';
-    els.view.innerHTML = '<div class="split"><div class="readout">'+readout+'</div>'
+      + '<div class="sub2">'+(maxft>0?("peak "+maxft+" ft next 24h"):"forecast")+'</div>'
+      + '<div class="wtable">'+(rows||'<div class="dim">No forecast yet.</div>')+'</div>';
+    els.view.innerHTML = '<div class="split waves"><div class="readout">'+readout+'</div>'
       + '<div class="stage" id="stage"></div></div>';
     mountFrames(tab, $("stage"));
   }

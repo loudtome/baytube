@@ -179,9 +179,24 @@ def get_gridpoint(url, ua, timeout):
     dir_s = series("windDirection")
     gst_s = series("windGust")
 
+    def at(series_vals, t):
+        """Value of the step-function at time t (last point at or before t)."""
+        v = None
+        for start, val in series_vals:
+            if start <= t:
+                v = val
+            else:
+                break
+        return v if v is not None else (series_vals[0][1] if series_vals else None)
+
     wave_now = current(wave_s)
-    wave_fc = [{"iso": t.isoformat(), "ft": m_to_ft(v)}
-               for t, v in wave_s if now <= t <= horizon][:9]
+    # regular 3-hourly samples for a readable forecast table
+    wave_fc = []
+    for h in range(0, 25, 3):
+        t = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=h)
+        val = at(wave_s, t)
+        if val is not None:
+            wave_fc.append({"iso": t.isoformat(), "ft": m_to_ft(val)})
 
     spd_now = current(spd_s)
     dir_now = current(dir_s)
