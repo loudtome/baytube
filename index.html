@@ -264,33 +264,42 @@
      portrait are unaffected. Tunable: raise/lower the max-height if a
      particular panel isn't caught. */
   @media (orientation: landscape) and (max-height: 760px) {
-    .sca { font-size: 23px; padding: 12px 26px; }
-    .tab { font-size: 20px; padding: 15px 16px; }
+    .sca { font-size: 24px; padding: 10px 22px; }
+    .tab { font-size: 20px; padding: 14px 16px; }
     .tab .pip { width: 11px; height: 11px; }
-    .head { padding-top: 12px; }
-    .head .title { font-size: 32px; }
+    /* trim chrome so the maps/graphs get more room */
+    .head { padding: 8px 16px 0; }
+    .head .title { font-size: 28px; }
     .head .kicker { font-size: 15px; }
-    .head .stamp { font-size: 16px; }
-    .big .n { font-size: 88px; }
+    .head .stamp { font-size: 15px; }
+    .view { padding: 8px 14px 10px; }
+    .big .n { font-size: 92px; }
     .big .u { font-size: 30px; }
-    .big .lbl { font-size: 16px; }
-    .card .lbl { font-size: 16px; }
-    .card .v { font-size: 46px; }
-    .card .x { font-size: 18px; }
-    .sub2 { font-size: 18px; }
-    .wrow { font-size: 17px; }
+    .big .lbl { font-size: 17px; }
+    /* Now-screen cards: larger */
+    .card { padding: 14px 18px; }
+    .card .lbl { font-size: 18px; }
+    .card .v { font-size: 58px; }
+    .card .v small { font-size: 0.4em; }
+    .card .x { font-size: 20px; }
+    .sub2 { font-size: 19px; }
+    /* forecast tables: bigger, wave/wind numbers largest */
+    .wrow { font-size: 20px; }
+    .wrow .wv { font-size: 23px; }
+    .wrow .ww { font-size: 19px; }
     .wrow.whead { font-size: 13px; }
-    .tideitem { min-width: 120px; }
-    .tideitem .tt { font-size: 14px; }
-    .tideitem .th { font-size: 28px; }
-    .tideitem .tf { font-size: 16px; }
+    /* tide times: larger */
+    .tideitem { min-width: 132px; }
+    .tideitem .tt { font-size: 15px; }
+    .tideitem .th { font-size: 34px; }
+    .tideitem .tf { font-size: 17px; }
     .windnow .card-dir { font-size: 48px; }
-    .windnow .compass { width: 150px; height: 150px; }
-    .placeholder { font-size: 19px; }
+    .windnow .compass { width: 148px; height: 148px; }
+    .placeholder { font-size: 20px; }
     .framebadge { font-size: 15px; }
     /* svg text lives in viewBox units */
-    .chart .ax { font-size: 16px; }
-    .chart .dlab { font-size: 16px; }
+    .chart .ax { font-size: 17px; }
+    .chart .dlab { font-size: 23px; }   /* wind direction on the graph */
     .compass text { font-size: 15px; }
   }
 </style>
