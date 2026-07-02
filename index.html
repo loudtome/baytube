@@ -173,9 +173,10 @@
   .card .v { font-size: clamp(26px,5vh,48px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
   .card .v small { font-size: 0.42em; color: var(--muted); font-weight: 600; }
   .card .x { font-size: clamp(11px,1.6vh,14px); color: var(--muted); }
-  .card.sca-card.active { border-color: rgba(226,86,77,0.6); background: rgba(226,86,77,0.12); }
-  .card.sca-card.expected { border-color: rgba(224,168,94,0.5); background: rgba(224,168,94,0.10); }
-  .card.sca-card.none { border-color: rgba(95,174,142,0.4); }
+  .card.sca-card.none { border-color: rgba(95,174,142,0.55); background: rgba(95,174,142,0.12); }
+  .card.sca-card.none .v { color: var(--green); }
+  .card.sca-card.active, .card.sca-card.expected { border-color: rgba(226,86,77,0.65); background: rgba(226,86,77,0.15); }
+  .card.sca-card.active .v, .card.sca-card.expected .v { color: var(--red); }
   .card .arrowmini { display:inline-block; transition: transform 600ms ease; }
 
   /* line chart (wind speed / wave height vs time) */
@@ -191,6 +192,9 @@
   .chart .cline { fill: none; stroke: var(--brass); stroke-width: 2.5;
                   vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
   .chart .pt { fill: var(--brass); stroke: var(--bg-deep); stroke-width: 2; }
+  .chart .dlab { fill: var(--ink); stroke: var(--bg-deep); stroke-width: 3; paint-order: stroke;
+                 font-family: var(--mono); font-size: 12px; font-weight: 700; text-anchor: middle; }
+  .chart .dtick { stroke: rgba(224,168,94,0.5); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
 
   /* wave / wind forecast table */
   .split.waves .readout, .split.wind .readout {
@@ -384,6 +388,30 @@
     }
     var d=""; pts.forEach(function(p,i){ d+=(i?" L":"M")+X(p.iso).toFixed(1)+" "+Y(p[key]).toFixed(1); });
     var area=d+" L"+X(pts[pts.length-1].iso).toFixed(1)+" "+(mT+ih)+" L"+X(pts[0].iso).toFixed(1)+" "+(mT+ih)+" Z";
+
+    // direction notation (e.g. "NE") at inflections/turning points of the curve
+    var labels="";
+    if(opts.dirKey){
+      var picks=[0];
+      for(var k=1;k<pts.length-1;k++){
+        var s1=pts[k][key]-pts[k-1][key], s2=pts[k+1][key]-pts[k][key];
+        if((s1>=0)!==(s2>=0)) picks.push(k);   // slope sign flips = turning point
+      }
+      picks.push(pts.length-1);
+      var lastX=-1e9;
+      picks.forEach(function(k){
+        var p=pts[k], deg=p[opts.dirKey]; if(deg==null) return;
+        var px=X(p.iso); if(px-lastX < 46) return;   // keep labels from crowding
+        lastX=px;
+        var peak = (k===0||pts[k][key]>=pts[k-1][key]) && (k===pts.length-1||pts[k][key]>=pts[k+1][key]);
+        var py=Y(p[key]);
+        var ly=peak ? py-9 : py+17;
+        if(ly<mT+11) ly=mT+11; if(ly>mT+ih-3) ly=mT+ih-3;
+        labels += '<line class="dtick" x1="'+px.toFixed(1)+'" y1="'+py.toFixed(1)+'" x2="'+px.toFixed(1)+'" y2="'+(peak?py-6:py+6).toFixed(1)+'"/>'
+          + '<text class="dlab" x="'+px.toFixed(1)+'" y="'+ly.toFixed(1)+'">'+CARD[Math.round(deg/22.5)%16]+'</text>';
+      });
+    }
+
     return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'
       + '<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">'
       +   '<stop offset="0" stop-color="#e0a85e" stop-opacity="0.38"/>'
@@ -391,6 +419,7 @@
       + g
       + '<path class="area" d="'+area+'"/><path class="cline" d="'+d+'"/>'
       + '<circle class="pt" cx="'+X(pts[0].iso).toFixed(1)+'" cy="'+Y(pts[0][key]).toFixed(1)+'" r="4"/>'
+      + labels
       + '<text class="ax unit" x="'+mL+'" y="'+(mT-5)+'">'+unit+'</text></svg>';
   }
 
@@ -447,7 +476,7 @@
       +   '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>'
       + '<div class="wtable">'+(rows?head+rows:'<div class="dim">No forecast yet.</div>')+'</div>';
     els.view.innerHTML = '<div class="split wind"><div class="readout">'+readout+'</div>'
-      + '<div class="graphwrap">'+lineChart(fc,{key:"kt",unit:"kt"})+'</div></div>';
+      + '<div class="graphwrap">'+lineChart(fc,{key:"kt",unit:"kt",dirKey:"dir_deg"})+'</div></div>';
   }
 
   function renderWaves(tab){
