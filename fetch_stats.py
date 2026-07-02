@@ -190,13 +190,23 @@ def get_gridpoint(url, ua, timeout):
         return v if v is not None else (series_vals[0][1] if series_vals else None)
 
     wave_now = current(wave_s)
-    # regular 3-hourly samples for a readable forecast table
+    # regular 3-hourly samples (48h) for a readable forecast table:
+    # wave height plus the wind (speed + direction) at the same times.
     wave_fc = []
-    for h in range(0, 25, 3):
-        t = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=h)
-        val = at(wave_s, t)
-        if val is not None:
-            wave_fc.append({"iso": t.isoformat(), "ft": m_to_ft(val)})
+    base_t = now.replace(minute=0, second=0, microsecond=0)
+    for h in range(0, 49, 3):
+        t = base_t + timedelta(hours=h)
+        wv = at(wave_s, t)
+        if wv is None:
+            continue
+        ws = at(spd_s, t)
+        wd = at(dir_s, t)
+        wave_fc.append({
+            "iso": t.isoformat(),
+            "ft": m_to_ft(wv),
+            "wind_kt": kmh_to_kt(ws) if ws is not None else None,
+            "wind_dir_deg": round(wd) if wd is not None else None,
+        })
 
     spd_now = current(spd_s)
     dir_now = current(dir_s)
