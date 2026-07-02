@@ -36,8 +36,8 @@ time and **never enters git history**, so the repo stays tiny forever.
 | Tab | Shows | Source |
 |-----|-------|--------|
 | **Now** | Overview: SCA, wind, waves, water temp, tide — one glance | (all below) |
-| **Wind** | Speed (kt) + gust + compass/cardinal, and an animated bay wind-field map | NDBC buoy **44058** (live) + NWS gridpoint `AKQ/88,86`; map = NOAA **CBOFS** wind nowcast |
-| **Waves** | Significant wave height (ft) + animated forecast map | NWS gridpoint `waveHeight`; map = **VIMS CBEFS** |
+| **Wind** | Speed (kt) + gust + compass/cardinal, a 48h line graph, and a 48h table | NDBC buoy **44058** (live, when fresh) + NWS gridpoint `AKQ/88,86` |
+| **Waves** | Significant wave height (ft), a 48h line graph, and a 48h table | NWS gridpoint `waveHeight` |
 | **Tides** | Current level + rising/falling + today's high/low times | NOAA CO-OPS **8636580 "Windmill Point"** (0.1 mi, live sensor) |
 | **Radar** | KAKQ loop | NWS Wakefield |
 | **Sea Nettles** | Rappahannock/York probability (8-day animation) | NOAA NCCOS (Box 6) |

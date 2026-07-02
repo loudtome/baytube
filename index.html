@@ -178,14 +178,27 @@
   .card.sca-card.none { border-color: rgba(95,174,142,0.4); }
   .card .arrowmini { display:inline-block; transition: transform 600ms ease; }
 
+  /* line chart (wind speed / wave height vs time) */
+  .graphwrap { flex: 1; min-width: 0; min-height: 0; display: flex; align-items: center;
+               justify-content: center; padding-left: clamp(6px,1.4vw,18px); }
+  @media (orientation: portrait) { .graphwrap { padding-left: 0; padding-bottom: 6px; } }
+  .chart { width: 100%; height: 100%; }
+  .chart .gl { stroke: rgba(173,201,214,0.12); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .chart .ax { fill: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .chart .yl { text-anchor: end; }
+  .chart .unit { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .chart .area { fill: url(#cg); stroke: none; }
+  .chart .cline { fill: none; stroke: var(--brass); stroke-width: 2.5;
+                  vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .pt { fill: var(--brass); stroke: var(--bg-deep); stroke-width: 2; }
+
   /* wave / wind forecast table */
   .split.waves .readout, .split.wind .readout {
-                          flex-direction: column; align-items: stretch; justify-content: flex-start; }
-  .split.wind .readout  { flex: 0 0 clamp(240px, 36%, 380px); }
-  /* waves: graph and map share the space equally, so the map renders larger */
-  .split.waves .readout, .split.waves .stage { flex: 1 1 0; min-height: 0; }
+                          flex-direction: column; align-items: stretch; justify-content: flex-start;
+                          flex: 0 0 clamp(260px, 42%, 440px); min-height: 0; }
   @media (orientation: portrait) {
-    .split.wind .readout { flex: 0 0 auto; } }
+    .split.waves .readout, .split.wind .readout { flex: 1 1 0; }
+    .graphwrap { flex: 1 1 0; } }
   .windnow { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
   .windnow .compass { width: clamp(90px,14vh,140px); height: clamp(90px,14vh,140px); }
   .windnow .card-dir { font-size: clamp(26px,6vh,52px); font-weight: 700; line-height: 1; }
@@ -343,6 +356,44 @@
       + '</svg>';
   }
 
+  /* ---------------- line chart (svg) ---------------- */
+  function axisTop(m){ var c=[1,2,3,4,5,6,8,10,12,15,20,25,30,40,50,60,80,100];
+    for(var i=0;i<c.length;i++) if(c[i]>=m) return c[i]; return Math.ceil(m/20)*20; }
+  function niceStep(top){ return top<=6?1: top<=12?2: top<=30?5: top<=60?10:20; }
+  function lineChart(pts, opts){
+    opts=opts||{}; var key=opts.key||"v", unit=opts.unit||"";
+    pts=(pts||[]).filter(function(p){ return p[key]!=null; });
+    if(pts.length<2) return '<div class="placeholder">Forecast not available yet.</div>';
+    var W=640,H=380, mL=38,mR=16,mT=18,mB=30, iw=W-mL-mR, ih=H-mT-mB;
+    var mx=0; pts.forEach(function(p){ if(p[key]>mx) mx=p[key]; });
+    var top=axisTop(mx), step=niceStep(top);
+    var t0=new Date(pts[0].iso).getTime(), t1=new Date(pts[pts.length-1].iso).getTime(), span=(t1-t0)||1;
+    function X(iso){ return mL+(new Date(iso).getTime()-t0)/span*iw; }
+    function Y(v){ return mT+ih-(v/top)*ih; }
+    var g="";
+    for(var tv=0; tv<=top+1e-6; tv+=step){
+      var yy=Y(tv);
+      g+='<line class="gl" x1="'+mL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-mR)+'" y2="'+yy.toFixed(1)+'"/>'
+       + '<text class="ax yl" x="'+(mL-6)+'" y="'+(yy+3.5).toFixed(1)+'">'+tv+'</text>';
+    }
+    for(var h=0; h<=48; h+=12){
+      var tt=t0+h*3600000; if(tt>t1+1) break;
+      var xx=X(new Date(tt).toISOString());
+      g+='<line class="gl" x1="'+xx.toFixed(1)+'" y1="'+mT+'" x2="'+xx.toFixed(1)+'" y2="'+(mT+ih)+'"/>'
+       + '<text class="ax" x="'+xx.toFixed(1)+'" y="'+(H-10)+'" text-anchor="middle">'+(h===0?"now":fmtDayTime(new Date(tt).toISOString()))+'</text>';
+    }
+    var d=""; pts.forEach(function(p,i){ d+=(i?" L":"M")+X(p.iso).toFixed(1)+" "+Y(p[key]).toFixed(1); });
+    var area=d+" L"+X(pts[pts.length-1].iso).toFixed(1)+" "+(mT+ih)+" L"+X(pts[0].iso).toFixed(1)+" "+(mT+ih)+" Z";
+    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'
+      + '<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">'
+      +   '<stop offset="0" stop-color="#e0a85e" stop-opacity="0.38"/>'
+      +   '<stop offset="1" stop-color="#e0a85e" stop-opacity="0.02"/></linearGradient></defs>'
+      + g
+      + '<path class="area" d="'+area+'"/><path class="cline" d="'+d+'"/>'
+      + '<circle class="pt" cx="'+X(pts[0].iso).toFixed(1)+'" cy="'+Y(pts[0][key]).toFixed(1)+'" r="4"/>'
+      + '<text class="ax unit" x="'+mL+'" y="'+(mT-5)+'">'+unit+'</text></svg>';
+  }
+
   /* ---------------- views ---------------- */
   function tabById(id){ for(var i=0;i<tabs.length;i++) if(tabs[i].id===id) return tabs[i]; return null; }
 
@@ -396,8 +447,7 @@
       +   '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>'
       + '<div class="wtable">'+(rows?head+rows:'<div class="dim">No forecast yet.</div>')+'</div>';
     els.view.innerHTML = '<div class="split wind"><div class="readout">'+readout+'</div>'
-      + '<div class="stage" id="stage"></div></div>';
-    mountFrames(tab, $("stage"));
+      + '<div class="graphwrap">'+lineChart(fc,{key:"kt",unit:"kt"})+'</div></div>';
   }
 
   function renderWaves(tab){
@@ -425,8 +475,7 @@
       + '<div class="sub2">'+(maxft>0?("peak "+maxft+" ft next 48h"):"forecast")+'</div>'
       + '<div class="wtable">'+(rows?head+rows:'<div class="dim">No forecast yet.</div>')+'</div>';
     els.view.innerHTML = '<div class="split waves"><div class="readout">'+readout+'</div>'
-      + '<div class="stage" id="stage"></div></div>';
-    mountFrames(tab, $("stage"));
+      + '<div class="graphwrap">'+lineChart(fc,{key:"ft",unit:"ft"})+'</div></div>';
   }
 
   function renderTides(){
@@ -595,14 +644,10 @@
   function applyStats(s){ stats=s; renderSCA();
     // live-refresh the current view if it's data-driven
     var t=tabs[idx]; if(!t) return;
-    if(["overview","wind","waves","tides"].indexOf(t.type)>=0){ /* re-render but keep frames running */
-      var hadFrames = !!frameTimer;
-      if(t.type==="overview") renderOverview();
-      else if(t.type==="tides") renderTides();
-      else if(t.type==="wind"||t.type==="waves"){ /* only refresh readout numbers, keep animation */
-        if(!hadFrames) showTab(idx);
-      }
-    }
+    if(t.type==="overview") renderOverview();
+    else if(t.type==="tides") renderTides();
+    else if(t.type==="wind") renderWind(t);
+    else if(t.type==="waves") renderWaves(t);
     els.stamp.textContent = s&&s.generated? "updated "+fmtAgo(s.generated):"";
   }
 

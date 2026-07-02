@@ -39,35 +39,15 @@
       "id": "wind",
       "label": "Wind",
       "type": "wind",
-      "kicker": "Buoy 44058 · CBOFS",
-      "dwell_seconds": 14,
-      "frames": {
-        "page_url": "https://cdn.tidesandcurrents.noaa.gov/ofs/cbofs/wwwgraphics/CBOFS2_cb_all_wind_now_option",
-        "frame_base": "https://cdn.tidesandcurrents.noaa.gov/ofs/cbofs/wwwgraphics/",
-        "frame_regex": "CBOFS2_cb_all_wind_now_(\\d+)\\.png",
-        "frame_take": "last",
-        "max_frames": 16,
-        "refresh_minutes": 60,
-        "stale_after_minutes": 360,
-        "note": "NOAA CBOFS wind nowcast, Chesapeake Bay. Hourly frames for the last ~24h."
-      }
+      "kicker": "NDBC 44058 · NWS",
+      "dwell_seconds": 14
     },
     {
       "id": "waves",
       "label": "Waves",
       "type": "waves",
-      "kicker": "NWS forecast · VIMS CBEFS",
-      "dwell_seconds": 16,
-      "frames": {
-        "page_url": "https://www.vims.edu/research/products/cbefs/waves/",
-        "frame_base": "https://web4.vims.edu/drf/abever/FIGURES/",
-        "frame_regex": "HSIG_Nowcast_(\\d+)\\.png",
-        "frame_take": "first",
-        "max_frames": 16,
-        "refresh_minutes": 180,
-        "stale_after_minutes": 720,
-        "note": "VIMS CBEFS significant wave-height forecast. Frame index shifts each model run, so we always read the live list."
-      }
+      "kicker": "NWS forecast",
+      "dwell_seconds": 14
     },
     {
       "id": "tides",
