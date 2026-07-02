@@ -14,6 +14,12 @@ set -u
 # EDIT THIS: your published Pages URL. After enabling Pages (Settings → Pages
 # → Source: GitHub Actions) it is https://<your-username>.github.io/<repo>/
 URL="${BAYDASH_URL:-https://loudtome.github.io/baytube/}"
+
+# EDIT THIS: display zoom. A small 7" panel driven at a high resolution (e.g.
+# 1080p) makes the web page render tiny, because the browser can't know the
+# screen is physically small. This scales the WHOLE UI up. Try 2, 2.5, or 3
+# until the text is comfortable. (1 = no scaling.) Can also set BAYDASH_SCALE.
+SCALE="${BAYDASH_SCALE:-2.5}"
 # ---------------------------------------------------------------------------
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -47,6 +53,7 @@ mkdir -p "$PROFILE"
 
 exec "$CHROME" \
   --kiosk "$URL" \
+  --force-device-scale-factor="$SCALE" \
   --user-data-dir="$PROFILE" \
   --password-store=basic \
   --no-first-run \
