@@ -304,11 +304,13 @@
     .wrow.whead { font-size: 13px; }
     /* waves graph-only: keep a compact hero, let the graph fill */
     .graphonly .big .n { font-size: 60px; }
-    /* tide times: much larger */
-    .tideitem { min-width: 158px; }
-    .tideitem .tt { font-size: 16px; }
-    .tideitem .th { font-size: 56px; }
-    .tideitem .tf { font-size: 20px; }
+    /* tide times: very large — show the next 4 and make the times dominant */
+    .tidesched { gap: 12px; }
+    .tidesched .tideitem:nth-child(n+5) { display: none; }
+    .tideitem { min-width: 210px; padding: 12px 22px; }
+    .tideitem .tt { font-size: 19px; }
+    .tideitem .th { font-size: 82px; line-height: 1; }
+    .tideitem .tf { font-size: 22px; }
     .windnow .card-dir { font-size: 48px; }
     .windnow .compass { width: 148px; height: 148px; }
     .placeholder { font-size: 20px; }
