@@ -212,8 +212,13 @@ def process_frames(tab, settings, prev, now):
     timeout = settings.get("request_timeout_seconds", 20)
     ua = settings.get("user_agent", "BayDash/1.0")
 
-    if not is_due(prev.get("frames_last_success"), refresh, now):
-        rec.update({"frames": prev.get("frames", []),
+    prev_frames = prev.get("frames", []) or []
+    mx = spec.get("max_frames")
+    # also refetch if we're holding more frames than the config now allows
+    # (so a tightened max_frames / changed selection applies right away)
+    over_cap = mx is not None and len(prev_frames) > mx
+    if not over_cap and not is_due(prev.get("frames_last_success"), refresh, now):
+        rec.update({"frames": prev_frames,
                     "frames_last_success": prev.get("frames_last_success"),
                     "frames_ok": prev.get("frames_ok", True)})
     else:

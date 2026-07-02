@@ -40,7 +40,7 @@ time and **never enters git history**, so the repo stays tiny forever.
 | **Waves** | Significant wave height (ft), a 48h line graph, and a 48h table | NWS gridpoint `waveHeight` |
 | **Tides** | Current level + rising/falling + today's high/low times | NOAA CO-OPS **8636580 "Windmill Point"** (0.1 mi, live sensor) |
 | **Radar** | KAKQ loop | NWS Wakefield |
-| **Sea Nettles** | Rappahannock/York probability (8-day animation) | NOAA NCCOS (Box 6) |
+| **Sea Nettles** | Rappahannock/York probability, today + tomorrow | NOAA NCCOS (Box 6) |
 | _banner_ | **Small Craft Advisory**: none / in-effect / expected ≤24h | NWS alerts, marine zones **ANZ630/631/635** |
 
 Cycling: each tab auto-advances after its `dwell_seconds` (~10–16s). Tap/click a

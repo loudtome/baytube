@@ -77,11 +77,11 @@
         "page_url": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/Config_Files/config-seanettles-rappahannockriver.txt",
         "frame_base": "https://nccospublicstor.blob.core.windows.net/nws-ncep/Nettles/ChesapeakeBay/Box6_RappahannockRiver/",
         "frame_regex": "image(\\d+)\\.png",
-        "frame_take": "first",
-        "max_frames": 8,
-        "refresh_minutes": 720,
+        "frame_take": "last",
+        "max_frames": 2,
+        "refresh_minutes": 360,
         "stale_after_minutes": 2160,
-        "note": "NCCOS sea nettle probability, Rappahannock/York region (Box 6). 8-day daily-forecast animation. Seasonal; expect it offline in winter."
+        "note": "NCCOS sea nettle probability, Rappahannock/York region (Box 6). The source publishes 8 daily frames = 6 past days + today + 1 forecast day; frame_take:last with max_frames:2 keeps only today + tomorrow (the model's 1-day forecast horizon), dropping the past days. Seasonal; expect it offline in winter."
       }
     }
   ]
