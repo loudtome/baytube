@@ -284,10 +284,10 @@ def get_buoy(station, ua, timeout):
     }
 
 
-def get_hourly(url, ua, timeout, step=3, count=9):
+def get_hourly(url, ua, timeout, step=1, count=24):
     """Air temp (°F) + rain chance (%) from the NWS hourly forecast (a land
-    gridpoint), sampled every `step` hours for `count` points (9 x 3h = ~24h,
-    a clean 3x3 grid). Temperature already comes in °F."""
+    gridpoint), sampled every `step` hours for `count` points (24h for the
+    temp/rain graph). Temperature already comes in °F."""
     periods = http(url, ua, timeout)["properties"]["periods"][::step][:count]
     out = []
     for p in periods:

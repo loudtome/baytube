@@ -206,6 +206,12 @@
   .chart .cline { fill: none; stroke: var(--brass); stroke-width: 2.5;
                   vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
   .chart .pt { fill: var(--brass); stroke: var(--bg-deep); stroke-width: 2; }
+  /* weather dual-axis chart: temp line (left/brass) + rain bars (right/blue) */
+  .chart .tempax { fill: var(--brass); }
+  .chart .rainax { fill: #7fb0d8; }
+  .chart .tline { fill: none; stroke: var(--brass); stroke-width: 3;
+                  vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .rainbar { fill: rgba(90,160,224,0.55); }
   .chart .dlab { fill: var(--ink); stroke: var(--bg-deep); stroke-width: 3; paint-order: stroke;
                  font-family: var(--mono); font-size: 12px; font-weight: 700; text-anchor: middle; }
   .chart .dtick { stroke: rgba(224,168,94,0.5); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
@@ -632,17 +638,53 @@
       + '<div class="tidesched">'+(items||'<div class="placeholder">No tide data.</div>')+'</div></div>';
   }
 
+  // dual-axis: temperature line (left, °F) + rain-chance bars (right, %) over 24h
+  function weatherChart(per){
+    per=(per||[]).filter(function(p){ return p.temp_f!=null; });
+    if(per.length<2) return '<div class="placeholder">No forecast yet.</div>';
+    var W=940,H=430, mL=46,mR=54,mT=24,mB=34, iw=W-mL-mR, ih=H-mT-mB;
+    var temps=per.map(function(p){return p.temp_f;});
+    var lo=Math.floor((Math.min.apply(null,temps)-3)/5)*5;
+    var hi=Math.ceil((Math.max.apply(null,temps)+3)/5)*5;
+    if(hi-lo<10) hi=lo+10;
+    var tstep=(hi-lo)>40?10:5;
+    var t0=new Date(per[0].iso).getTime(), t1=new Date(per[per.length-1].iso).getTime(), span=(t1-t0)||1;
+    function X(iso){ return mL+(new Date(iso).getTime()-t0)/span*iw; }
+    function Yt(v){ return mT+ih-((v-lo)/(hi-lo))*ih; }
+    function Yr(v){ return mT+ih-(v/100)*ih; }
+    var g="";
+    for(var tv=lo; tv<=hi+0.001; tv+=tstep){
+      var yy=Yt(tv);
+      g+='<line class="gl" x1="'+mL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-mR)+'" y2="'+yy.toFixed(1)+'"/>'
+       + '<text class="ax tempax" x="'+(mL-6)+'" y="'+(yy+4).toFixed(1)+'" text-anchor="end">'+tv+'</text>';
+    }
+    [0,50,100].forEach(function(rv){
+      g+='<text class="ax rainax" x="'+(W-mR+8)+'" y="'+(Yr(rv)+4).toFixed(1)+'" text-anchor="start">'+rv+'</text>';
+    });
+    for(var hh=0; hh<=24; hh+=6){
+      var tt=t0+hh*3600000; if(tt>t1+1) break;
+      var xx=X(new Date(tt).toISOString());
+      g+='<line class="gl" x1="'+xx.toFixed(1)+'" y1="'+mT+'" x2="'+xx.toFixed(1)+'" y2="'+(mT+ih)+'"/>'
+       + '<text class="ax" x="'+xx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle">'+(hh===0?"now":fmtDayTime(new Date(tt).toISOString()))+'</text>';
+    }
+    var bw=Math.max(3, iw/per.length*0.6), base=Yr(0), bars="";
+    per.forEach(function(p){
+      var pop=p.pop||0; if(pop<=0) return;
+      var x=X(p.iso), y=Yr(pop);
+      bars+='<rect class="rainbar" x="'+(x-bw/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(base-y).toFixed(1)+'" rx="2"/>';
+    });
+    var d=""; per.forEach(function(p,i){ d+=(i?" L":"M")+X(p.iso).toFixed(1)+" "+Yt(p.temp_f).toFixed(1); });
+    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'
+      + g + bars + '<path class="tline" d="'+d+'"/>'
+      + '<text class="ax tempax" x="'+mL+'" y="'+(mT-7)+'" text-anchor="start">°F</text>'
+      + '<text class="ax rainax" x="'+(W-mR+8)+'" y="'+(mT-7)+'" text-anchor="start">% rain</text>'
+      + '</svg>';
+  }
   function renderHourly(){
-    var h=(stats&&stats.hourly)||{}; var per=(h.periods||[]).slice(0,9);
-    if(!per.length){ els.view.innerHTML='<div class="placeholder">No hourly forecast yet.</div>'; return; }
-    var cells=per.map(function(p){
-      var pop=p.pop||0;
-      return '<div class="hcell'+(pop>=30?" wet":"")+'">'
-        + '<div class="ht">'+fmtDayTime(p.iso)+'</div>'
-        + '<div class="hd">'+num(p.temp_f)+'°</div>'
-        + '<div class="hp">'+pop+'% rain</div></div>';
-    }).join("");
-    els.view.innerHTML='<div class="hgrid">'+cells+'</div>';
+    var h=(stats&&stats.hourly)||{};
+    els.view.innerHTML = '<div class="graphonly">'
+      + '<div class="ghead"><div class="lbl">Next 24 hours · temp &amp; rain</div></div>'
+      + '<div class="graphwrap">'+weatherChart(h.periods||[])+'</div></div>';
   }
 
   function renderImage(tab){

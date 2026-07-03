@@ -59,7 +59,7 @@
     },
     {
       "id": "hourly",
-      "label": "Hourly",
+      "label": "Weather",
       "type": "hourly",
       "kicker": "NWS · Kilmarnock",
       "dwell_seconds": 14
