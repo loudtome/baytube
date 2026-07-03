@@ -415,6 +415,8 @@
     var t=d.toLocaleTimeString(undefined,{hour:"numeric"});
     if(d.toDateString()===new Date().toDateString()) return t;
     return d.toLocaleDateString(undefined,{weekday:"short"})+" "+t; }
+  function fmtHourAP(iso){ var d=new Date(iso); if(isNaN(d)) return "";
+    return d.toLocaleTimeString(undefined,{hour:"numeric"}); }   // "2 AM", "4 PM"
   function fmtCountdown(iso){ if(!iso) return ""; var ms=new Date(iso).getTime()-Date.now();
     if(isNaN(ms)||ms<=0) return "now"; var m=Math.round(ms/60000), h=Math.floor(m/60); m=m%60;
     return h>0 ? (h+"h "+m+"m") : (m+"m"); }
@@ -665,7 +667,7 @@
       var tt=t0+hh*3600000; if(tt>t1+1) break;
       var xx=X(new Date(tt).toISOString());
       g+='<line class="gl" x1="'+xx.toFixed(1)+'" y1="'+mT+'" x2="'+xx.toFixed(1)+'" y2="'+(mT+ih)+'"/>'
-       + '<text class="ax" x="'+xx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle">'+(hh===0?"now":fmtDayTime(new Date(tt).toISOString()))+'</text>';
+       + '<text class="ax" x="'+xx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle">'+(hh===0?"now":fmtHourAP(new Date(tt).toISOString()))+'</text>';
     }
     var bw=Math.max(3, iw/per.length*0.6), base=Yr(0), bars="";
     per.forEach(function(p){
