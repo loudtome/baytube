@@ -23,6 +23,7 @@
 
   "stats_sources": {
     "gridpoint": "https://api.weather.gov/gridpoints/AKQ/88,86",
+    "hourly_forecast": "https://api.weather.gov/gridpoints/AKQ/82,90/forecast/hourly",
     "tide_station": "8636580",
     "buoy": "44058",
     "marine_zones": "ANZ630,ANZ631,ANZ635"
@@ -55,6 +56,13 @@
       "type": "tides",
       "kicker": "NOAA CO-OPS · Windmill Point",
       "dwell_seconds": 12
+    },
+    {
+      "id": "hourly",
+      "label": "Hourly",
+      "type": "hourly",
+      "kicker": "NWS · Kilmarnock",
+      "dwell_seconds": 14
     },
     {
       "id": "radar",

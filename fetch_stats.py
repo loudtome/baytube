@@ -284,6 +284,22 @@ def get_buoy(station, ua, timeout):
     }
 
 
+def get_hourly(url, ua, timeout, hours=12):
+    """Next N hours of air temp (°F) + rain chance (%) from the NWS hourly
+    forecast (a land gridpoint). Temperature already comes in °F."""
+    periods = http(url, ua, timeout)["properties"]["periods"][:hours]
+    out = []
+    for p in periods:
+        pop = (p.get("probabilityOfPrecipitation") or {}).get("value")
+        out.append({
+            "iso": p["startTime"],
+            "temp_f": p.get("temperature"),
+            "pop": pop if pop is not None else 0,
+            "short": p.get("shortForecast", ""),
+        })
+    return {"ok": True, "periods": out}
+
+
 def get_sca(zones, ua, timeout):
     """Small Craft Advisory: active now, expected within 24h, or none."""
     d = http(f"{ALERTS}?zone={zones}", ua, timeout)
@@ -386,6 +402,8 @@ def main():
     }
     stats["tide"] = run("tide", lambda: get_tides(src["tide_station"], ua, timeout))
     stats["sca"] = run("sca", lambda: get_sca(src["marine_zones"], ua, timeout))
+    if src.get("hourly_forecast"):
+        stats["hourly"] = run("hourly", lambda: get_hourly(src["hourly_forecast"], ua, timeout))
 
     tmp = STATS_PATH + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:

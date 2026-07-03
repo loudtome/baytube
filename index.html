@@ -237,17 +237,42 @@
                 text-transform: uppercase; color: var(--muted); opacity: 0.7; }
   .wrow.whead .wbar { background: none; }
 
+  /* hourly air temp + rain chance */
+  .htable { display:flex; flex-direction:column; gap:6px; flex:1; min-height:0; overflow:auto;
+            font-variant-numeric:tabular-nums; }
+  .hrow { display:grid; grid-template-columns: 5em auto minmax(20px,1fr) 4.6em; align-items:center;
+          gap:14px; font-size: clamp(14px,2vh,20px); padding-right: 4px; }
+  .hrow .ht { font-family:var(--mono); color:var(--muted); white-space:nowrap; }
+  .hrow .hd { font-weight:800; color:#fff; white-space:nowrap; }
+  .hrow .hbar { height:10px; border-radius:5px; background:var(--panel-2); overflow:hidden; }
+  .hrow .hbar > i { display:block; height:100%; border-radius:5px; background:linear-gradient(90deg,#5aa0e0,#6fb6a4); }
+  .hrow .hpv { text-align:right; color:var(--muted); white-space:nowrap; }
+  .hrow.hhead { font-family:var(--mono); font-size: clamp(9px,1.2vh,12px); letter-spacing:0.12em;
+                text-transform:uppercase; color:var(--muted); }
+  .hrow.hhead .hbar { background:none; }
+
   /* tides */
   .tidewrap { display:flex; flex-direction:column; gap: clamp(10px,2vh,18px); flex:1; min-height:0; }
   .tidenow { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
   .tidesched { display:flex; gap:10px; flex-wrap:wrap; }
   .tideitem { background:var(--panel); border:1px solid var(--line); border-radius:12px;
               padding: clamp(10px,1.6vh,16px) clamp(12px,1.4vw,18px); display:flex; flex-direction:column; gap:4px; min-width:104px; }
-  .tideitem.next { border-color: var(--brass); box-shadow: inset 0 0 0 1px rgba(224,168,94,0.3); }
-  .tideitem.past { opacity: 0.45; }
+  /* next-high hero */
+  .tidehero { margin-bottom: clamp(6px,1.4vh,14px); }
+  .tidehero .lbl { font-family:var(--mono); letter-spacing:0.16em; text-transform:uppercase;
+                   color:var(--brass); font-size: clamp(12px,1.8vh,18px); }
+  .tidehero .hn { font-weight:800; color:#fff; line-height:1; font-variant-numeric:tabular-nums;
+                  font-size: clamp(52px,11vh,120px); }
+  .tidehero .hs { font-family:var(--mono); color:var(--muted); font-size: clamp(13px,1.8vh,18px); margin-top:4px; }
+  /* color-coded schedule: highs pop (warm), lows recede (gray) */
   .tideitem .tt { font-family:var(--mono); font-size: clamp(9px,1.3vh,12px); letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
   .tideitem .th { font-size: clamp(40px,7vh,88px); font-weight:800; color:#fff; }
   .tideitem .tf { font-size: clamp(11px,1.5vh,13px); color:var(--muted); }
+  .tideitem.hi .tt { color: var(--brass); }
+  .tideitem.lo { opacity: 0.85; }
+  .tideitem.lo .th { color: #93a7b1; }
+  .tideitem.nexthigh { border-color: var(--brass); background: rgba(224,168,94,0.08);
+                       box-shadow: inset 0 0 0 1px rgba(224,168,94,0.35), 0 0 26px rgba(224,168,94,0.14); }
 
   /* decorative sailboat */
   .boatwrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding-top: 6px; }
@@ -305,20 +330,34 @@
     .wrow .ww { font-size: 4.3vh; }
     .wrow.whead { font-size: 2.2vh; }
     .graphonly .big .n { font-size: 10vh; }
-    /* map tabs (radar / sea nettles): trim chrome so maps use nearly the screen */
-    body[data-tab="image"] .head, body[data-tab="frames"] .head { padding: 0.7vh 2.3vh 0; }
-    body[data-tab="image"] .head .title, body[data-tab="frames"] .head .title { font-size: 3.3vh; }
-    body[data-tab="image"] .head .kicker, body[data-tab="frames"] .head .kicker { font-size: 2vh; }
-    body[data-tab="image"] .view, body[data-tab="frames"] .view { padding: 0.7vh 1.3vh 1vh; }
+    /* hourly table: big temp, readable rain % */
+    .hrow { font-size: 3.4vh; column-gap: 2.4vh; }
+    .hrow .hd { font-size: 6.5vh; }
+    .hrow .hpv { font-size: 4.5vh; }
+    .hrow .hbar { height: 1.7vh; }
+    .hrow.hhead { font-size: 2.2vh; }
+    .htable .hrow:nth-child(n+11) { display: none; }  /* header + ~10 hours */
+    /* radar (image): drop the header entirely so the map fills the screen —
+       the active tab is already shown in the left rail */
+    body[data-tab="image"] .head { display: none; }
+    body[data-tab="image"] .view { padding: 0.6vh 0.8vh; }
+    /* sea nettles (frames): keep a slim header for the tab name */
+    body[data-tab="frames"] .head { padding: 0.7vh 2.3vh 0; }
+    body[data-tab="frames"] .head .title { font-size: 3.3vh; }
+    body[data-tab="frames"] .head .kicker { font-size: 2vh; }
+    body[data-tab="frames"] .view { padding: 0.7vh 1.3vh 1vh; }
     .framesrow { gap: 1.3vh; }
     .framesrow .framecap { font-size: 4vh; }
     /* tide times: dominant; show the next 4 */
+    .tidehero .lbl { font-size: 3.6vh; }
+    .tidehero .hn { font-size: 21vh; }
+    .tidehero .hs { font-size: 3.4vh; }
     .tidesched { gap: 2vh; }
     .tidesched .tideitem:nth-child(n+5) { display: none; }
-    .tideitem { min-width: 34vh; padding: 2vh 3.7vh; }
-    .tideitem .tt { font-size: 3.2vh; }
-    .tideitem .th { font-size: 14.3vh; line-height: 1; color: #fff; font-weight: 800; }
-    .tideitem .tf { font-size: 3.7vh; }
+    .tideitem { min-width: 24vh; padding: 1.6vh 3vh; }
+    .tideitem .tt { font-size: 3vh; }
+    .tideitem .th { font-size: 9vh; line-height: 1; font-weight: 800; }
+    .tideitem .tf { font-size: 3.2vh; }
     .windnow .card-dir { font-size: 8vh; }
     .windnow .compass { width: 24.7vh; height: 24.7vh; }
     .placeholder { font-size: 3.3vh; }
@@ -375,6 +414,9 @@
     var t=d.toLocaleTimeString(undefined,{hour:"numeric"});
     if(d.toDateString()===new Date().toDateString()) return t;
     return d.toLocaleDateString(undefined,{weekday:"short"})+" "+t; }
+  function fmtCountdown(iso){ if(!iso) return ""; var ms=new Date(iso).getTime()-Date.now();
+    if(isNaN(ms)||ms<=0) return "now"; var m=Math.round(ms/60000), h=Math.floor(m/60); m=m%60;
+    return h>0 ? (h+"h "+m+"m") : (m+"m"); }
   function fmtAgo(iso){ if(!iso) return ""; var d=new Date(iso); if(isNaN(d)) return "";
     var m=Math.round((Date.now()-d.getTime())/60000);
     if(m<1) return "just now"; if(m<60) return m+" min ago";
@@ -579,26 +621,47 @@
 
   function renderTides(){
     var td=(stats&&stats.tide)||{};
-    var evs = (td.events||[]).slice();
     var now = Date.now();
-    // show only UPCOMING tides so every time is bright and readable
-    var show = evs.filter(function(e){ return new Date(e.iso).getTime()>now; }).slice(0,6);
-    var nextIso = td.next && td.next.iso;
+    var upcoming = (td.events||[]).filter(function(e){ return new Date(e.iso).getTime()>now; });
+    var nextHigh=null;
+    for(var i=0;i<upcoming.length;i++){ if(upcoming[i].type==="H"){ nextHigh=upcoming[i]; break; } }
+    var show = upcoming.slice(0,6);
+    var stateTxt = td.state? cap(td.state) : "—";
+
+    var hero = '<div class="tidehero">'
+      + '<div class="lbl">▲ Next high tide</div>'
+      + '<div class="hn">'+(nextHigh?fmtClock(nextHigh.iso):"—")+'</div>'
+      + '<div class="hs">'+(nextHigh?("in "+fmtCountdown(nextHigh.iso)+" · "+nextHigh.ft+" ft"):"no forecast")
+      +   (td.now_ft!=null?("  ·  now "+td.now_ft+" ft "+stateTxt.toLowerCase()):"")+'</div>'
+      + '</div>';
+
     var items = show.map(function(e){
-      var isNext = e.iso===nextIso, isPast = new Date(e.iso).getTime()<=now;
       var hi = e.type==="H";
-      return '<div class="tideitem'+(isNext?" next":"")+(isPast?" past":"")+'">'
+      var isNextHigh = nextHigh && e.iso===nextHigh.iso;
+      return '<div class="tideitem '+(hi?"hi":"lo")+(isNextHigh?" nexthigh":"")+'">'
         + '<div class="tt">'+(hi?"▲ High":"▼ Low")+'</div>'
         + '<div class="th">'+fmtClock(e.iso)+'</div>'
         + '<div class="tf">'+e.ft+' ft</div></div>';
     }).join("");
-    var stateTxt = td.state? cap(td.state): "—";
-    els.view.innerHTML = '<div class="tidewrap">'
-      + '<div class="tidenow"><div class="big"><div class="lbl">Now · '+stateTxt+'</div>'
-      +   '<span class="n">'+num(td.now_ft)+'</span><span class="u">ft</span></div>'
-      +   '<div class="sub2">'+(td.obs_iso?("as of "+fmtClock(td.obs_iso)):"")+'</div></div>'
-      + '<div class="tidesched">'+(items||'<div class="placeholder">No tide data.</div>')+'</div>'
-      + '<div class="boatwrap">'+boatSVG("")+'</div></div>';
+
+    els.view.innerHTML = '<div class="tidewrap">'+hero
+      + '<div class="tidesched">'+(items||'<div class="placeholder">No tide data.</div>')+'</div></div>';
+  }
+
+  function renderHourly(){
+    var h=(stats&&stats.hourly)||{}; var per=h.periods||[];
+    if(!per.length){ els.view.innerHTML='<div class="placeholder">No hourly forecast yet.</div>'; return; }
+    var head='<div class="hrow hhead"><span class="ht">time</span><span class="hd">temp</span>'
+      + '<span></span><span class="hpv">rain</span></div>';
+    var rows=per.map(function(p){
+      var pop=p.pop||0, w=Math.max(2, pop);
+      return '<div class="hrow">'
+        + '<span class="ht">'+fmtDayTime(p.iso)+'</span>'
+        + '<span class="hd">'+num(p.temp_f)+'°</span>'
+        + '<span class="hbar"><i style="width:'+w+'%"></i></span>'
+        + '<span class="hpv">'+pop+'%</span></div>';
+    }).join("");
+    els.view.innerHTML='<div class="htable">'+head+rows+'</div>';
   }
 
   function renderImage(tab){
@@ -690,6 +753,7 @@
       case "wind":     renderWind(t); break;
       case "waves":    renderWaves(t); break;
       case "tides":    renderTides(); break;
+      case "hourly":   renderHourly(); break;
       case "image":    renderImage(t); break;
       default:
         if(t.frames && t.layout==="sidebyside") renderFramesRow(t);
@@ -747,6 +811,7 @@
     var t=tabs[idx]; if(!t) return;
     if(t.type==="overview") renderOverview();
     else if(t.type==="tides") renderTides();
+    else if(t.type==="hourly") renderHourly();
     else if(t.type==="wind") renderWind(t);
     else if(t.type==="waves") renderWaves(t);
     els.stamp.textContent = s&&s.generated? "updated "+fmtAgo(s.generated):"";
