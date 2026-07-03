@@ -271,67 +271,60 @@
                  font-size: clamp(13px,2vh,17px); line-height:1.5; max-width: 34ch; }
   .dim { color: var(--muted); }
   .hide { display: none !important; }
-  /* TEMP: viewport readout to diagnose kiosk media-query matching */
-  #vp { position: fixed; left: 4px; bottom: 2px; z-index: 99; pointer-events: none;
-        font-family: var(--mono); font-size: 12px; color: rgba(136,160,172,0.6); }
 
-  /* Small landscape panels (the 7" Pi kiosk). On a short screen the clamp()
-     font sizes bottom out at their minimums and read tiny on a physical 7"
-     display, so scale text + key UI up. iPad landscape (height >= 768) and
-     portrait are unaffected. Tunable: raise/lower the max-height if a
-     particular panel isn't caught. */
-  @media (orientation: landscape) and (max-height: 760px) {
-    .sca { font-size: 24px; padding: 10px 22px; }
-    .tab { font-size: 20px; padding: 14px 16px; }
-    .tab .pip { width: 11px; height: 11px; }
-    /* trim chrome so the maps/graphs get more room */
-    .head { padding: 8px 16px 0; }
-    .head .title { font-size: 28px; }
-    .head .kicker { font-size: 15px; }
-    .head .stamp { font-size: 15px; }
-    .view { padding: 8px 14px 10px; }
-    .big .n { font-size: 92px; }
-    .big .u { font-size: 30px; }
-    .big .lbl { font-size: 17px; }
-    /* Now-screen cards: much larger (several-fold); keep the secondary line to
-       one row so the big values fit without overlapping */
-    .grid { gap: 10px; }
-    .card { padding: 8px 16px; gap: 2px; overflow: hidden; }
-    .card .lbl { font-size: 20px; }
-    .card .v { font-size: 84px; line-height: 1; }
+  /* Kiosk panels: either a genuinely short landscape screen, OR a WIDE
+     landscape viewport (>=1400px) — e.g. a small 7" panel being driven at
+     1080p, which the browser can't tell is physically small. Sizes are in vh
+     so a given value is the same FRACTION of screen height at 600px or 1080px
+     (= the same physical size on the panel). iPad (portrait, or landscape
+     under 1400px wide) is unaffected. SVG text (chart/compass) is in viewBox
+     units and already scales with the graphic, so it stays in px. */
+  @media (orientation: landscape) and (max-height: 760px),
+         (orientation: landscape) and (min-width: 1400px) {
+    .sca { font-size: 4vh; padding: 1.7vh 3.7vh; }
+    .tab { font-size: 3.3vh; padding: 2.3vh 2.7vh; }
+    .tab .pip { width: 1.8vh; height: 1.8vh; }
+    .head { padding: 1.3vh 2.7vh 0; }
+    .head .title { font-size: 4.7vh; }
+    .head .kicker { font-size: 2.5vh; }
+    .head .stamp { font-size: 2.5vh; }
+    .view { padding: 1.3vh 2.3vh 1.7vh; }
+    .big .n { font-size: 15.3vh; }
+    .big .u { font-size: 5vh; }
+    .big .lbl { font-size: 2.8vh; }
+    .grid { gap: 1.7vh; }
+    .card { padding: 1.3vh 2.7vh; gap: 0.3vh; overflow: hidden; }
+    .card .lbl { font-size: 3.3vh; }
+    .card .v { font-size: 14vh; line-height: 1; }
     .card .v small { font-size: 0.32em; }
-    .card .x { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sub2 { font-size: 19px; }
-    /* wind forecast table (waves tab has no table now) */
+    .card .x { font-size: 3vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub2 { font-size: 3.2vh; }
     .split.wind .readout { flex-basis: clamp(300px, 48%, 500px); }
-    .wrow { font-size: 22px; grid-template-columns: 3.2em minmax(18px,1fr) auto auto; column-gap: 12px; }
-    .wrow .wv { font-size: 30px; }
-    .wrow .ww { font-size: 26px; }
-    .wrow.whead { font-size: 13px; }
-    /* waves graph-only: keep a compact hero, let the graph fill */
-    .graphonly .big .n { font-size: 60px; }
-    /* map tabs (radar / sea nettles): trim the header + padding so the
-       map(s) use nearly the whole screen */
-    body[data-tab="image"] .head, body[data-tab="frames"] .head { padding: 4px 14px 0; }
-    body[data-tab="image"] .head .title, body[data-tab="frames"] .head .title { font-size: 20px; }
-    body[data-tab="image"] .head .kicker, body[data-tab="frames"] .head .kicker { font-size: 12px; }
-    body[data-tab="image"] .view, body[data-tab="frames"] .view { padding: 4px 8px 6px; }
-    .framesrow { gap: 8px; }
-    .framesrow .framecap { font-size: 24px; }
-    /* tide times: very large — show the next 4 and make the times dominant */
-    .tidesched { gap: 12px; }
+    .wrow { font-size: 3.7vh; grid-template-columns: 3.2em minmax(18px,1fr) auto auto; column-gap: 2vh; }
+    .wrow .wv { font-size: 5vh; }
+    .wrow .ww { font-size: 4.3vh; }
+    .wrow.whead { font-size: 2.2vh; }
+    .graphonly .big .n { font-size: 10vh; }
+    /* map tabs (radar / sea nettles): trim chrome so maps use nearly the screen */
+    body[data-tab="image"] .head, body[data-tab="frames"] .head { padding: 0.7vh 2.3vh 0; }
+    body[data-tab="image"] .head .title, body[data-tab="frames"] .head .title { font-size: 3.3vh; }
+    body[data-tab="image"] .head .kicker, body[data-tab="frames"] .head .kicker { font-size: 2vh; }
+    body[data-tab="image"] .view, body[data-tab="frames"] .view { padding: 0.7vh 1.3vh 1vh; }
+    .framesrow { gap: 1.3vh; }
+    .framesrow .framecap { font-size: 4vh; }
+    /* tide times: dominant; show the next 4 */
+    .tidesched { gap: 2vh; }
     .tidesched .tideitem:nth-child(n+5) { display: none; }
-    .tideitem { min-width: 210px; padding: 12px 22px; }
-    .tideitem .tt { font-size: 19px; }
-    .tideitem .th { font-size: 86px; line-height: 1; color: #fff; font-weight: 800; }
-    .tideitem .tf { font-size: 22px; }
-    .windnow .card-dir { font-size: 48px; }
-    .windnow .compass { width: 148px; height: 148px; }
-    .placeholder { font-size: 20px; }
-    .framebadge { font-size: 15px; }
-    /* svg text lives in viewBox units */
+    .tideitem { min-width: 34vh; padding: 2vh 3.7vh; }
+    .tideitem .tt { font-size: 3.2vh; }
+    .tideitem .th { font-size: 14.3vh; line-height: 1; color: #fff; font-weight: 800; }
+    .tideitem .tf { font-size: 3.7vh; }
+    .windnow .card-dir { font-size: 8vh; }
+    .windnow .compass { width: 24.7vh; height: 24.7vh; }
+    .placeholder { font-size: 3.3vh; }
+    .framebadge { font-size: 2.5vh; }
     .chart .ax { font-size: 17px; }
-    .chart .dlab { font-size: 23px; }   /* wind direction on the graph */
+    .chart .dlab { font-size: 23px; }
     .compass text { font-size: 15px; }
   }
 </style>
@@ -767,13 +760,6 @@
   }
   poll("manifest.json", applyManifest, "manifest_reload_seconds");
   poll("stats.json", applyStats, "stats_reload_seconds");
-
-  // TEMP: show the actual browser viewport so we can size the kiosk correctly
-  (function(){
-    var v=document.createElement("div"); v.id="vp"; document.body.appendChild(v);
-    function u(){ v.textContent = window.innerWidth+"×"+window.innerHeight+" @"+(window.devicePixelRatio||1)+"x"; }
-    u(); window.addEventListener("resize", u);
-  })();
 })();
 </script>
 </body>
