@@ -237,19 +237,17 @@
                 text-transform: uppercase; color: var(--muted); opacity: 0.7; }
   .wrow.whead .wbar { background: none; }
 
-  /* hourly air temp + rain chance */
-  .htable { display:flex; flex-direction:column; gap:6px; flex:1; min-height:0; overflow:auto;
-            font-variant-numeric:tabular-nums; }
-  .hrow { display:grid; grid-template-columns: 5em auto minmax(20px,1fr) 4.6em; align-items:center;
-          gap:14px; font-size: clamp(14px,2vh,20px); padding-right: 4px; }
-  .hrow .ht { font-family:var(--mono); color:var(--muted); white-space:nowrap; }
-  .hrow .hd { font-weight:800; color:#fff; white-space:nowrap; }
-  .hrow .hbar { height:10px; border-radius:5px; background:var(--panel-2); overflow:hidden; }
-  .hrow .hbar > i { display:block; height:100%; border-radius:5px; background:linear-gradient(90deg,#5aa0e0,#6fb6a4); }
-  .hrow .hpv { text-align:right; color:var(--muted); white-space:nowrap; }
-  .hrow.hhead { font-family:var(--mono); font-size: clamp(9px,1.2vh,12px); letter-spacing:0.12em;
-                text-transform:uppercase; color:var(--muted); }
-  .hrow.hhead .hbar { background:none; }
+  /* hourly air temp + rain chance — 3-column grid (24h at a glance) */
+  .hgrid { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr;
+           gap: clamp(8px,1.6vh,16px); flex:1; min-height:0; }
+  .hcell { background:var(--panel); border:1px solid var(--line); border-radius:14px;
+           padding: clamp(6px,1.2vh,14px); display:flex; flex-direction:column; align-items:center;
+           justify-content:center; gap:2px; min-height:0; }
+  .hcell.wet { border-color: rgba(90,160,224,0.5); background: rgba(90,160,224,0.10); }
+  .hcell .ht { font-family:var(--mono); color:var(--muted); letter-spacing:0.08em; font-size: clamp(11px,1.6vh,15px); }
+  .hcell .hd { font-weight:800; color:#fff; line-height:1; font-variant-numeric:tabular-nums;
+               font-size: clamp(34px,7vh,80px); }
+  .hcell .hp { font-family:var(--mono); color:#7fb0d8; font-size: clamp(12px,1.7vh,16px); }
 
   /* tides */
   .tidewrap { display:flex; flex-direction:column; gap: clamp(10px,2vh,18px); flex:1; min-height:0; }
@@ -330,13 +328,10 @@
     .wrow .ww { font-size: 4.3vh; }
     .wrow.whead { font-size: 2.2vh; }
     .graphonly .big .n { font-size: 10vh; }
-    /* hourly table: big temp, readable rain % */
-    .hrow { font-size: 3.4vh; column-gap: 2.4vh; }
-    .hrow .hd { font-size: 6.5vh; }
-    .hrow .hpv { font-size: 4.5vh; }
-    .hrow .hbar { height: 1.7vh; }
-    .hrow.hhead { font-size: 2.2vh; }
-    .htable .hrow:nth-child(n+11) { display: none; }  /* header + ~10 hours */
+    /* hourly 3-column grid: big temp cells */
+    .hcell .ht { font-size: 3.2vh; }
+    .hcell .hd { font-size: 11vh; }
+    .hcell .hp { font-size: 3.4vh; }
     /* radar (image): drop the header entirely so the map fills the screen —
        the active tab is already shown in the left rail */
     body[data-tab="image"] .head { display: none; }
@@ -638,19 +633,16 @@
   }
 
   function renderHourly(){
-    var h=(stats&&stats.hourly)||{}; var per=h.periods||[];
+    var h=(stats&&stats.hourly)||{}; var per=(h.periods||[]).slice(0,9);
     if(!per.length){ els.view.innerHTML='<div class="placeholder">No hourly forecast yet.</div>'; return; }
-    var head='<div class="hrow hhead"><span class="ht">time</span><span class="hd">temp</span>'
-      + '<span></span><span class="hpv">rain</span></div>';
-    var rows=per.map(function(p){
-      var pop=p.pop||0, w=Math.max(2, pop);
-      return '<div class="hrow">'
-        + '<span class="ht">'+fmtDayTime(p.iso)+'</span>'
-        + '<span class="hd">'+num(p.temp_f)+'°</span>'
-        + '<span class="hbar"><i style="width:'+w+'%"></i></span>'
-        + '<span class="hpv">'+pop+'%</span></div>';
+    var cells=per.map(function(p){
+      var pop=p.pop||0;
+      return '<div class="hcell'+(pop>=30?" wet":"")+'">'
+        + '<div class="ht">'+fmtDayTime(p.iso)+'</div>'
+        + '<div class="hd">'+num(p.temp_f)+'°</div>'
+        + '<div class="hp">'+pop+'% rain</div></div>';
     }).join("");
-    els.view.innerHTML='<div class="htable">'+head+rows+'</div>';
+    els.view.innerHTML='<div class="hgrid">'+cells+'</div>';
   }
 
   function renderImage(tab){
