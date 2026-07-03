@@ -541,8 +541,11 @@
   function renderOverview(){
     var w=(stats&&stats.wind)||{}, wv=(stats&&stats.waves)||{}, wt=(stats&&stats.water)||{},
         air=(stats&&stats.air)||{}, td=(stats&&stats.tide)||{}, sc=(stats&&stats.sca)||{status:"unknown"};
-    var next = td.next;
-    var tideLine = td.state ? (cap(td.state) + (next? " · "+(next.type==="H"?"high":"low")+" "+fmtClock(next.iso):"")) : "—";
+    var nowMs = Date.now(), nextHigh = null, evsT = td.events || [];
+    for (var ti=0; ti<evsT.length; ti++){ if(evsT[ti].type==="H" && new Date(evsT[ti].iso).getTime()>nowMs){ nextHigh=evsT[ti]; break; } }
+    var hiClock = nextHigh ? fmtClock(nextHigh.iso).split(" ") : null;   // ["1:27","AM"]
+    var tideVal = hiClock ? (hiClock[0]+'<small> '+(hiClock[1]||"")+'</small>') : "—";
+    var tideExtra = nextHigh ? ("next high · in "+fmtCountdown(nextHigh.iso)) : (td.state?cap(td.state):"");
     var scaTxt = sc.status==="active"?"In effect": sc.status==="expected"?"Expected": sc.status==="none"?"None":"—";
     var arrow = w.dir_deg!=null ? '<span class="arrowmini" style="transform:rotate('+w.dir_deg+'deg)">↑</span> ' : '';
     var html = '<div class="grid">'
@@ -553,7 +556,7 @@
       + card("", "Wave Height", num(wv.height_ft)+'<small> ft</small>', "significant, forecast")
       + card("", "Water Temp", num(wt.temp_f)+'<small> °F</small>', wt.obs_iso?fmtAgo(wt.obs_iso):"")
       + card("", "Air Temp", num(air.temp_f)+'<small> °F</small>', air.obs_iso?fmtAgo(air.obs_iso):(air.source||""))
-      + card("", "Tide", num(td.now_ft)+'<small> ft</small>', tideLine)
+      + card("", "Next High Tide", tideVal, tideExtra)
       + '</div>';
     els.view.innerHTML = boatSVG("seascape") + html;
   }
@@ -566,27 +569,13 @@
   function renderWind(tab){
     var w=(stats&&stats.wind)||{};
     var fc=w.forecast||[];
-    var maxkt=0; fc.forEach(function(f){ if(f.kt>maxkt) maxkt=f.kt; });
-    var scale=maxkt>0?maxkt:1;
-    var rows=fc.map(function(f,i){
-      var bw=Math.max(4,Math.round(f.kt/scale*100));
-      var dir = f.dir_deg!=null
-        ? '<span class="warr" style="transform:rotate('+f.dir_deg+'deg)">↑</span>'+cardinalOf(f.dir_deg) : '—';
-      return '<div class="wrow'+(i===0?" now":"")+'"><span class="wt">'+(i===0?"now":fmtDayTime(f.iso))+'</span>'
-        + '<span class="wbar"><i style="width:'+bw+'%"></i></span>'
-        + '<span class="wv">'+f.kt+' kt</span>'
-        + '<span class="ww">'+dir+'</span></div>';
-    }).join("");
-    var head = '<div class="wrow whead"><span class="wt">time</span><span></span>'
-      + '<span class="wv">wind</span><span class="ww">dir</span></div>';
     var readout = '<div class="big"><div class="lbl">Wind speed now</div>'
       + '<span class="n">'+num(w.speed_kt)+'</span><span class="u">kt</span></div>'
       + '<div class="sub2">'+(w.gust_kt!=null?("gusts "+w.gust_kt+" kt"):"")
       +   (w.obs_iso?(" · "+fmtAgo(w.obs_iso)):"")+(w.source?(" · "+w.source):"")+'</div>'
       + '<div class="windnow">'+compassSVG(w.dir_deg)
       +   '<div><div class="card-dir">'+(w.dir_cardinal||cardinalOf(w.dir_deg)||"—")+'</div>'
-      +   '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>'
-      + '<div class="wtable">'+(rows?head+rows:'<div class="dim">No forecast yet.</div>')+'</div>';
+      +   '<div class="sub2">'+(w.dir_deg!=null?("from "+w.dir_deg+"°"):"")+'</div></div></div>';
     els.view.innerHTML = '<div class="split wind"><div class="readout">'+readout+'</div>'
       + '<div class="graphwrap">'+lineChart(fc,{key:"kt",unit:"kt",dirKey:"dir_deg"})+'</div></div>';
   }

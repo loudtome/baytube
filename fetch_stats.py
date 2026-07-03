@@ -284,10 +284,11 @@ def get_buoy(station, ua, timeout):
     }
 
 
-def get_hourly(url, ua, timeout, hours=12):
-    """Next N hours of air temp (°F) + rain chance (%) from the NWS hourly
-    forecast (a land gridpoint). Temperature already comes in °F."""
-    periods = http(url, ua, timeout)["properties"]["periods"][:hours]
+def get_hourly(url, ua, timeout, step=3, count=12):
+    """Air temp (°F) + rain chance (%) from the NWS hourly forecast (a land
+    gridpoint), sampled every `step` hours for `count` points. Temperature
+    already comes in °F."""
+    periods = http(url, ua, timeout)["properties"]["periods"][::step][:count]
     out = []
     for p in periods:
         pop = (p.get("probabilityOfPrecipitation") or {}).get("value")
