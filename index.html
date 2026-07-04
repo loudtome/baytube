@@ -212,7 +212,7 @@
   .chart .rainax { fill: #7fb0d8; }
   .chart .tline { fill: none; stroke: var(--brass); stroke-width: 3;
                   vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
-  .chart .thot { fill: url(#tg); opacity: 0.32; stroke: none; }   /* "it's HOT" wedge above 80F */
+  .chart .thot { fill: url(#tgfill); stroke: none; }   /* "it's HOT" wedge above 80F; alpha baked into the gradient */
   .chart .rainbar { fill: rgba(90,160,224,0.55); }
   .chart .dlab { fill: var(--ink); stroke: var(--bg-deep); stroke-width: 3; paint-order: stroke;
                  font-family: var(--mono); font-size: 12px; font-weight: 700; text-anchor: middle; }
@@ -507,6 +507,17 @@
     stops.sort(function(p,q){return p.o-q.o;});
     return stops;
   }
+  /* fill gradient for the "hot" wedge: transparent at 80F so its lower edge
+     fades into the background, ramping up in opacity (and redness) as it climbs. */
+  function tempFillStops(lo,hi){
+    var span=(hi-lo)||1, HOT=80, RED=98, MAXA=0.42;
+    function alpha(T){ return T<=HOT?0:Math.min(1,(T-HOT)/(RED-HOT))*MAXA; }
+    var temps=[hi]; TEMP_ANCHORS.forEach(function(a){ if(a[0]>HOT&&a[0]<hi) temps.push(a[0]); });
+    if(HOT>lo&&HOT<hi) temps.push(HOT);
+    temps.push(lo);
+    temps=temps.filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return b-a;});
+    return temps.map(function(T){ return {o:(hi-T)/span, c:tempColorAt(T), a:alpha(T)}; });
+  }
   function lineChart(pts, opts){
     opts=opts||{}; var key=opts.key||"v", unit=opts.unit||"";
     pts=(pts||[]).filter(function(p){ return p[key]!=null; });
@@ -706,6 +717,8 @@
     var d=""; per.forEach(function(p,i){ d+=(i?" L":"M")+X(p.iso).toFixed(1)+" "+Yt(p.temp_f).toFixed(1); });
     var tgStops=tempGradientStops(lo,hi).map(function(s){
       return '<stop offset="'+s.o.toFixed(3)+'" stop-color="'+s.c+'"/>'; }).join("");
+    var tgFill=tempFillStops(lo,hi).map(function(s){
+      return '<stop offset="'+s.o.toFixed(3)+'" stop-color="'+s.c+'" stop-opacity="'+s.a.toFixed(3)+'"/>'; }).join("");
 
     // filled wedge under the curve wherever temp >= 80F (redder as it climbs),
     // with interpolated crossings so each patch begins/ends exactly on the 80F line
@@ -731,7 +744,8 @@
     flushHot();
 
     return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'
-      + '<defs><linearGradient id="tg" gradientUnits="userSpaceOnUse" x1="'+mL+'" y1="'+mT+'" x2="'+mL+'" y2="'+(mT+ih)+'">'+tgStops+'</linearGradient></defs>'
+      + '<defs><linearGradient id="tg" gradientUnits="userSpaceOnUse" x1="'+mL+'" y1="'+mT+'" x2="'+mL+'" y2="'+(mT+ih)+'">'+tgStops+'</linearGradient>'
+      + '<linearGradient id="tgfill" gradientUnits="userSpaceOnUse" x1="'+mL+'" y1="'+mT+'" x2="'+mL+'" y2="'+(mT+ih)+'">'+tgFill+'</linearGradient></defs>'
       + g + hot + bars + '<path class="tline" style="stroke:url(#tg)" d="'+d+'"/>'
       + '<text class="ax tempax" x="'+mL+'" y="'+(mT-7)+'" text-anchor="start">°F</text>'
       + '<text class="ax rainax" x="'+(W-mR+8)+'" y="'+(mT-7)+'" text-anchor="start">% rain</text>'
