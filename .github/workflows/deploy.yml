@@ -71,6 +71,7 @@ jobs:
         run: |
           sed "s/__APP_VERSION__/${BAYDASH_APP_VERSION}/" index.html > build/index.html
           cp config.json build/config.json
+          cp favicon.svg build/favicon.svg
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

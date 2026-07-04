@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12303f"/>
+      <stop offset="1" stop-color="#07111a"/>
+    </linearGradient>
+    <linearGradient id="brass" gradientUnits="userSpaceOnUse" x1="24" y1="3" x2="24" y2="42">
+      <stop offset="0" stop-color="#f0c887"/>
+      <stop offset="1" stop-color="#d69a4c"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="48" height="48" rx="11" fill="url(#bg)"/>
+
+  <g fill="none" stroke="url(#brass)" stroke-width="3.1"
+     stroke-linecap="round" stroke-linejoin="round">
+    <!-- crossbar -->
+    <path d="M10 20 L38 20"/>
+    <!-- outer prongs -->
+    <path d="M11 20 C 8 14 8 11 11 8"/>
+    <path d="M37 20 C 40 14 40 11 37 8"/>
+    <!-- center prong -->
+    <path d="M24 20 L24 8"/>
+    <!-- shaft -->
+    <path d="M24 20 L24 40"/>
+    <!-- foot guard -->
+    <path d="M20 40 L28 40"/>
+  </g>
+
+  <!-- spearheads -->
+  <g fill="url(#brass)">
+    <path d="M24 3 L27 9 L21 9 Z"/>
+    <path d="M11 3 L14 9 L8 9 Z"/>
+    <path d="M37 3 L40 9 L34 9 Z"/>
+  </g>
+</svg>
