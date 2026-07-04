@@ -212,6 +212,7 @@
   .chart .rainax { fill: #7fb0d8; }
   .chart .tline { fill: none; stroke: var(--brass); stroke-width: 3;
                   vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .thot { fill: url(#tg); opacity: 0.32; stroke: none; }   /* "it's HOT" wedge above 80F */
   .chart .rainbar { fill: rgba(90,160,224,0.55); }
   .chart .dlab { fill: var(--ink); stroke: var(--bg-deep); stroke-width: 3; paint-order: stroke;
                  font-family: var(--mono); font-size: 12px; font-weight: 700; text-anchor: middle; }
@@ -705,9 +706,33 @@
     var d=""; per.forEach(function(p,i){ d+=(i?" L":"M")+X(p.iso).toFixed(1)+" "+Yt(p.temp_f).toFixed(1); });
     var tgStops=tempGradientStops(lo,hi).map(function(s){
       return '<stop offset="'+s.o.toFixed(3)+'" stop-color="'+s.c+'"/>'; }).join("");
+
+    // filled wedge under the curve wherever temp >= 80F (redder as it climbs),
+    // with interpolated crossings so each patch begins/ends exactly on the 80F line
+    var HOT=80, yHot=Yt(HOT), hot="", seg=null;
+    function pushCross(a,b,xa,xb){ var f=(HOT-a)/(b-a); return xa+f*(xb-xa); }
+    function flushHot(){
+      if(seg&&seg.length){ var p="M"+seg[0][0].toFixed(1)+" "+yHot.toFixed(1);
+        seg.forEach(function(s){ p+=" L"+s[0].toFixed(1)+" "+s[1].toFixed(1); });
+        hot+='<path class="thot" d="'+p+" L"+seg[seg.length-1][0].toFixed(1)+" "+yHot.toFixed(1)+' Z"/>'; }
+      seg=null;
+    }
+    per.forEach(function(p,i){
+      var t=p.temp_f, x=X(p.iso), prev=i>0?per[i-1].temp_f:null;
+      if(t>=HOT){
+        if(seg===null){ seg=[];
+          if(prev!=null&&prev<HOT) seg.push([pushCross(prev,t,X(per[i-1].iso),x),yHot]); }
+        seg.push([x,Yt(t)]);
+      }else if(seg!==null){
+        if(prev!=null&&prev>=HOT) seg.push([pushCross(prev,t,X(per[i-1].iso),x),yHot]);
+        flushHot();
+      }
+    });
+    flushHot();
+
     return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'
       + '<defs><linearGradient id="tg" gradientUnits="userSpaceOnUse" x1="'+mL+'" y1="'+mT+'" x2="'+mL+'" y2="'+(mT+ih)+'">'+tgStops+'</linearGradient></defs>'
-      + g + bars + '<path class="tline" style="stroke:url(#tg)" d="'+d+'"/>'
+      + g + hot + bars + '<path class="tline" style="stroke:url(#tg)" d="'+d+'"/>'
       + '<text class="ax tempax" x="'+mL+'" y="'+(mT-7)+'" text-anchor="start">°F</text>'
       + '<text class="ax rainax" x="'+(W-mR+8)+'" y="'+(mT-7)+'" text-anchor="start">% rain</text>'
       + '</svg>';
