@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Right of Way &amp; Channel Marker Challenge</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #efe6d0;
+    color: #1b3a4b;
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px 60px;
+  }
+  .app { width: 100%; max-width: 680px; }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    text-align: center;
+    color: #1b3a4b;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #5c6f78;
+    margin: 0 0 16px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #1b3a4b;
+    color: #f4ecd8;
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-block { min-width: 120px; }
+  .stat-label { font-size: 11px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 20px; font-weight: 600; }
+  .lives-row { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .life-chip {
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 20px;
+    background: #c98a2c;
+    color: #1b3a4b;
+    font-weight: 600;
+    transition: background 0.3s, color 0.3s, opacity 0.3s;
+  }
+  .life-chip.gone { background: rgba(255,255,255,0.15); color: rgba(244,236,216,0.4); text-decoration: line-through; }
+  .life-chip.pirate { background: #7a2620; color: #f4ecd8; }
+  .life-chip.pirate.gone { background: rgba(255,255,255,0.15); color: rgba(244,236,216,0.4); }
+
+  .stage {
+    background: linear-gradient(#bfe3f2 0%, #bfe3f2 62%, #2b7aa1 62%, #2b7aa1 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    border: 1px solid #9fc9dc;
+  }
+  .stage svg { display: block; width: 100%; height: auto; }
+
+  .destructible { transition: opacity 0.4s ease, transform 0.4s ease; transform-origin: center; }
+  .destructible.destroyed { opacity: 0; transform: scale(0.5) rotate(15deg); }
+  .ship-group.sinking { transition: transform 1.3s ease-in, opacity 1.3s ease-in; opacity: 0; }
+  #shipGroup.sinking { transform: translate(350px,0) scale(-1,1) translateY(90px) rotate(9deg); }
+  #pirateShipGroup.sinking { transform: translate(210px,0) translateY(90px) rotate(9deg); }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+    transition: opacity 0.25s ease;
+  }
+  .cards-grid.disabled { pointer-events: none; opacity: 0.55; }
+  .cards-grid.hidden { display: none; }
+  .chest { position: relative; height: 120px; cursor: pointer; perspective: 500px; }
+  .chest::before {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 12%;
+    width: 76%;
+    height: 10px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 72%);
+  }
+  .chest-base {
+    position: absolute;
+    bottom: 0;
+    left: 4%;
+    width: 92%;
+    height: 58%;
+    background-image:
+      linear-gradient(90deg, transparent 0 15%, rgba(224,168,84,0.9) 15% 21%, transparent 21% 79%, rgba(224,168,84,0.9) 79% 85%, transparent 85% 100%),
+      linear-gradient(150deg, #c08a4e 0%, #8a5a2a 45%, #5e3c1a 100%);
+    border: 2px solid #4a2f14;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow:
+      inset 0 3px 4px rgba(255,224,180,0.35),
+      inset 0 -6px 10px rgba(0,0,0,0.45),
+      0 5px 8px rgba(0,0,0,0.3);
+  }
+  .chest-base::after {
+    content: "";
+    position: absolute;
+    top: 38%;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(180deg, #3a2410, #1f1408);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .chest-label {
+    position: absolute;
+    bottom: 8%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    color: #f4ecd8;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    z-index: 1;
+  }
+  .chest-lid {
+    position: absolute;
+    top: 4%;
+    left: 4%;
+    width: 92%;
+    height: 40%;
+    background-image:
+      linear-gradient(90deg, transparent 0 15%, rgba(224,168,84,0.9) 15% 21%, transparent 21% 79%, rgba(224,168,84,0.9) 79% 85%, transparent 85% 100%),
+      linear-gradient(160deg, #e0ac60 0%, #a9713f 55%, #6e4520 100%);
+    border: 2px solid #4a2f14;
+    border-radius: 10px 10px 4px 4px;
+    box-shadow:
+      inset 0 3px 3px rgba(255,232,190,0.45),
+      inset 0 -4px 6px rgba(0,0,0,0.35),
+      0 3px 5px rgba(0,0,0,0.25);
+    transform-origin: bottom center;
+    transition: transform 0.5s ease;
+  }
+  .chest.open .chest-lid { transform: rotateX(-125deg); }
+  .chest-lock {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 13px;
+    background: linear-gradient(155deg, #f6dd9a 0%, #d9a441 45%, #96650f 100%);
+    border: 1px solid #5c3d0f;
+    border-radius: 3px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.5);
+    z-index: 2;
+    transition: opacity 0.3s;
+  }
+  .chest.open .chest-lock { opacity: 0; }
+  .chest-glow {
+    position: absolute;
+    top: 8%;
+    left: 10%;
+    width: 80%;
+    height: 55%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffe9a8 0%, rgba(255,233,168,0) 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+  .chest.open .chest-glow { opacity: 0.9; }
+
+  .question-panel {
+    background: #ffffff;
+    border: 1px solid #d8cba3;
+    border-radius: 12px;
+    padding: 18px 18px 14px;
+  }
+  .question-panel.hidden { display: none; }
+  .question-text {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    line-height: 1.4;
+  }
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice-btn {
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cfc4a0;
+    background: #f9f5e8;
+    font-size: 14px;
+    cursor: pointer;
+    color: #1b3a4b;
+  }
+  .choice-btn:hover:not(:disabled) { background: #f0e8d2; }
+  .choice-btn.correct { background: #dcefdc; border-color: #4c9a4c; color: #1f5c1f; }
+  .choice-btn.wrong { background: #f6dcdc; border-color: #b04a4a; color: #7a2222; }
+  .choice-btn:disabled { cursor: default; opacity: 0.9; }
+
+  .overlay {
+    position: static;
+    margin-top: 16px;
+    background: #1b3a4b;
+    color: #f4ecd8;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  .overlay.hidden { display: none; }
+  .overlay.win { background: #1f5c1f; }
+  .overlay h2 { margin: 0 0 8px; font-size: 20px; }
+  .overlay p { margin: 0 0 16px; font-size: 14px; color: #d7e2e7; }
+  .restart-btn {
+    background: #c98a2c;
+    color: #1b3a4b;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: #dd9c37; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Right of way &amp; channel marker challenge</h1>
+  <p class="subtitle">Open a treasure chest and answer. Get it right and your cannon fires on the pirate ship. Get it wrong and their cannon fires back.</p>
+
+  <div class="topbar">
+    <div class="stat-block">
+      <div class="stat-label">Score</div>
+      <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Your ship</div>
+      <div class="lives-row" id="lives-row"></div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Pirate ship</div>
+      <div class="lives-row" id="pirate-lives-row"></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg id="ship-svg" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="500" height="140" fill="#bfe3f2"></rect>
+      <path d="M0,140 Q25,132 50,140 T100,140 T150,140 T200,140 T250,140 T300,140 T350,140 T400,140 T450,140 T500,140 L500,220 L0,220 Z" fill="#2b7aa1"></path>
+      <path d="M0,140 Q25,134 50,140 T100,140 T150,140 T200,140 T250,140 T300,140 T350,140 T400,140 T450,140 T500,140" fill="none" stroke="#9fd4ea" stroke-width="2" opacity="0.6"></path>
+
+      <g id="shipGroup" class="ship-group" transform="translate(350,0) scale(-1,1)">
+        <path id="hull" d="M120,150 L280,150 L263,182 Q200,194 137,182 Z" fill="#a9713f" stroke="#6e4423" stroke-width="2"></path>
+
+        <g id="ourCannon">
+          <ellipse cx="130" cy="152" rx="10" ry="5" fill="#3a3a3a"></ellipse>
+          <line x1="130" y1="150" x2="104" y2="128" stroke="#3a3a3a" stroke-width="9" stroke-linecap="round"></line>
+        </g>
+
+        <g id="wheelhouse" class="destructible">
+          <rect x="178" y="112" width="46" height="38" fill="#8a5a3a" stroke="#5a3d24" stroke-width="1.5"></rect>
+          <rect x="172" y="104" width="58" height="10" rx="2" fill="#b33a2e" stroke="#7a2620" stroke-width="1"></rect>
+          <rect x="188" y="122" width="12" height="12" fill="#dceaf0"></rect>
+          <rect x="204" y="122" width="12" height="12" fill="#dceaf0"></rect>
+        </g>
+
+        <g id="foremast" class="destructible">
+          <line x1="150" y1="58" x2="150" y2="150" stroke="#5a3d24" stroke-width="4"></line>
+        </g>
+
+        <g id="aftmast" class="destructible">
+          <line x1="252" y1="38" x2="252" y2="150" stroke="#5a3d24" stroke-width="4"></line>
+          <rect x="252" y="34" width="22" height="5" fill="#b32234"></rect>
+          <rect x="252" y="39" width="22" height="5" fill="#ffffff"></rect>
+          <rect x="252" y="44" width="22" height="5" fill="#3c3b6e"></rect>
+        </g>
+
+        <g id="aftsail" class="destructible">
+          <path d="M252,42 L160,148 L252,148 Z" fill="#f7f3ea" stroke="#b8b0a0" stroke-width="1.5"></path>
+        </g>
+
+        <g id="foresail" class="destructible">
+          <path d="M150,62 L104,140 L150,148 Z" fill="#f7f3ea" stroke="#b8b0a0" stroke-width="1.5"></path>
+        </g>
+      </g>
+
+      <g id="pirateShipGroup" class="ship-group" transform="translate(210,0)">
+        <path id="p-hull" d="M120,150 L280,150 L263,182 Q200,194 137,182 Z" fill="#2e2e2e" stroke="#111111" stroke-width="2"></path>
+
+        <g id="pirateCannon">
+          <ellipse cx="130" cy="152" rx="10" ry="5" fill="#2e2e2e"></ellipse>
+          <line x1="130" y1="150" x2="104" y2="128" stroke="#2e2e2e" stroke-width="9" stroke-linecap="round"></line>
+        </g>
+
+        <g id="p-wheelhouse" class="destructible">
+          <rect x="178" y="112" width="46" height="38" fill="#3a2a20" stroke="#1a120c" stroke-width="1.5"></rect>
+          <rect x="172" y="104" width="58" height="10" rx="2" fill="#111111" stroke="#000000" stroke-width="1"></rect>
+          <rect x="188" y="122" width="12" height="12" fill="#8fa3ab"></rect>
+          <rect x="204" y="122" width="12" height="12" fill="#8fa3ab"></rect>
+        </g>
+
+        <g id="p-foremast" class="destructible">
+          <line x1="150" y1="58" x2="150" y2="150" stroke="#1a120c" stroke-width="4"></line>
+        </g>
+
+        <g id="p-aftmast" class="destructible">
+          <line x1="252" y1="38" x2="252" y2="150" stroke="#1a120c" stroke-width="4"></line>
+          <rect x="252" y="34" width="22" height="15" fill="#111111"></rect>
+          <circle cx="263" cy="39" r="3" fill="#f4ecd8"></circle>
+          <line x1="257" y1="45" x2="269" y2="45" stroke="#f4ecd8" stroke-width="1.5"></line>
+          <line x1="258" y1="43" x2="268" y2="47" stroke="#f4ecd8" stroke-width="1.2"></line>
+          <line x1="268" y1="43" x2="258" y2="47" stroke="#f4ecd8" stroke-width="1.2"></line>
+        </g>
+
+        <g id="p-aftsail" class="destructible">
+          <path d="M252,42 L160,148 L252,148 Z" fill="#9a9a9a" stroke="#555555" stroke-width="1.5"></path>
+        </g>
+
+        <g id="p-foresail" class="destructible">
+          <path d="M150,62 L104,140 L150,148 Z" fill="#9a9a9a" stroke="#555555" stroke-width="1.5"></path>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="cards-grid" id="cards-grid"></div>
+
+  <div class="question-panel hidden" id="question-panel">
+    <p class="question-text" id="question-text"></p>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="overlay hidden" id="gameover-overlay">
+    <h2 id="overlay-heading">The ship has gone down</h2>
+    <p id="final-score-text"></p>
+    <button class="restart-btn" id="restart-btn">Play again</button>
+  </div>
+</div>
+
+<script>
+  var QUESTIONS = [
+    { cat: "channel", q: "What does a red triangular buoy (nun) mean when you're returning from open water?", choices: ["Keep it on your port side", "Keep it on your starboard side", "It's a hazard marker", "It marks safe water all around"], a: 1 },
+    { cat: "channel", q: "When returning from sea, on which side should you keep a green square buoy (can)?", choices: ["Starboard", "Port", "Either side", "Directly ahead"], a: 1 },
+    { cat: "channel", q: "A buoy with red and green horizontal bands marks what?", choices: ["A junction or channel split", "A shipwreck", "A no-wake zone", "Safe water in all directions"], a: 0 },
+    { cat: "channel", q: "Red and white vertical stripes on a marker indicate:", choices: ["A restricted swimming area", "Safe water / mid-channel", "A junction", "A special feature like a cable"], a: 1 },
+    { cat: "channel", q: "A yellow buoy or marker typically indicates:", choices: ["Port side of channel", "Starboard side of channel", "A special feature (anchorage, cable, traffic separation)", "Safe water"], a: 2 },
+    { cat: "channel", q: "At night, a green light on a channel marker corresponds to:", choices: ["A red nun", "A green can", "A safe water marker", "A regulatory marker"], a: 1 },
+    { cat: "channel", q: "At night, a red light on a channel marker corresponds to:", choices: ["A green can", "A red nun", "A junction marker", "A special mark"], a: 1 },
+    { cat: "channel", q: "A quick-flashing white light typically marks:", choices: ["Mid-channel / fairway", "Port side returning", "Starboard side returning", "A hazard to avoid entirely"], a: 0 },
+    { cat: "channel", q: "A diamond-shaped marker with an orange border and a symbol usually indicates:", choices: ["Regulatory information (hazard, no-wake, restriction)", "Port side channel", "Starboard side channel", "Safe water"], a: 0 },
+    { cat: "channel", q: "Two fixed markers aligned vertically, one behind the other, are called:", choices: ["Junction markers", "Range markers, showing the channel centerline", "Safe water markers", "Regulatory markers"], a: 1 },
+    { cat: "channel", q: "What does the phrase \"red, right, returning\" mean?", choices: ["Keep red markers on your right heading out to sea", "Keep red markers on your right when returning from open water", "Red markers are always on the right riverbank", "It refers to sunset navigation"], a: 1 },
+    { cat: "rightofway", q: "In general, which vessel has right-of-way: a sailboat under sail or a powerboat under engine?", choices: ["Powerboat", "Sailboat", "Whichever is bigger", "First-come-first-served"], a: 1 },
+    { cat: "rightofway", q: "Who is responsible for keeping clear in an overtaking situation?", choices: ["The vessel being overtaken", "The overtaking vessel", "Whichever vessel is under sail", "It doesn't matter"], a: 1 },
+    { cat: "rightofway", q: "Two power-driven vessels are approaching head-on. What should each do?", choices: ["Both alter course to starboard (turn right)", "Both alter course to port (turn left)", "The larger vessel holds course", "Both stop engines"], a: 0 },
+    { cat: "rightofway", q: "In a crossing situation between two power-driven vessels, who must give way?", choices: ["The vessel on the left", "The vessel that has the other vessel on her own starboard side", "The faster vessel", "The vessel closer to shore"], a: 1 },
+    { cat: "rightofway", q: "What should the give-way vessel do?", choices: ["Wait until the last moment to act", "Take early and obvious action to avoid collision", "Speed up to cross first", "Sound five short blasts and continue"], a: 1 },
+    { cat: "rightofway", q: "What should the stand-on vessel generally do?", choices: ["Maintain course and speed", "Immediately change course", "Stop engines", "Reverse direction"], a: 0 },
+    { cat: "rightofway", q: "A vessel restricted in her ability to maneuver (towing, dredging) generally:", choices: ["Must always give way to smaller boats", "Has priority and should be given a wide berth", "Has no special status", "Only has priority at night"], a: 1 },
+    { cat: "rightofway", q: "A vessel not under command (disabled, no steering) generally:", choices: ["Has right-of-way over vessels that can still maneuver", "Must give way to all other vessels", "Has no priority", "Is required to anchor immediately"], a: 0 },
+    { cat: "rightofway", q: "A vessel actively fishing with gear deployed generally has right-of-way over:", choices: ["Vessels restricted in their ability to maneuver", "Ordinary power-driven and sailing vessels", "Vessels not under command", "All other vessels with no exceptions"], a: 1 },
+    { cat: "rightofway", q: "Which of these generally has the least right-of-way and must give way to almost everyone?", choices: ["A sailing vessel", "A power-driven vessel under normal operation", "A vessel not under command", "A vessel restricted in her ability to maneuver"], a: 1 },
+    { cat: "seamanship", q: "How long should your anchor rode be relative to the water depth?", choices: ["Equal to the depth of the water", "About 5 to 7 times the depth of the water (scope)", "10 to 12 times the depth of the water", "It doesn't matter as long as the anchor is heavy"], a: 1 },
+    { cat: "seamanship", q: "Why is a leeward shore dangerous?", choices: ["It's downwind, so wind and waves push the boat toward it, risking grounding", "It's always too deep to anchor near", "It has no tidal changes", "It's only dangerous at night"], a: 0 },
+    { cat: "seamanship", q: "What should you do if your motorboat runs aground?", choices: ["Gun the throttle forward to power through", "Continue forward slowly to look for deeper water", "Stop the engine, check for damage or injuries, then try to back off along the path you came in on", "Abandon ship immediately"], a: 2 },
+    { cat: "seamanship", q: "Which VHF radio channel is designated for distress and emergency calls?", choices: ["Channel 6", "Channel 9", "Channel 13", "Channel 16"], a: 3 },
+    { cat: "seamanship", q: "What type of life jacket is required on a motorboat?", choices: ["Any flotation cushion is sufficient, no PFD needed", "A USCG-approved wearable life jacket (Type I, II, III, or V) for each person on board", "Only the operator needs a life jacket", "Inflatable arm floaties for children only"], a: 1 },
+    { cat: "seamanship", q: "Which knots are most useful for securing a boat to a dock?", choices: ["Cleat hitch, bowline, and clove hitch", "Sheet bend, timber hitch, and prusik knot", "Just a simple overhand knot", "Square knot and slip knot only"], a: 0 },
+    { cat: "seamanship", q: "Which VHF radio channel is used for general, routine boater-to-boater communication?", choices: ["Channel 16", "Channel 68", "Channel 13", "Channel 70"], a: 1 }
+  ];
+  var CATEGORIES = [
+    { key: "channel", label: "Channel marker" },
+    { key: "rightofway", label: "Right of way" },
+    { key: "seamanship", label: "Seamanship" }
+  ];
+
+  var state = { score: 0, wrong: 0, pirateHits: 0, locked: false, cards: [], answeredCorrect: [] };
+  var PART_LABELS = ["Foresail", "Aft sail", "Foremast", "Aft mast", "Cabin", "Hull"];
+
+  var OUR_TARGETS = [
+    { id: "foresail", x: 222, y: 108 },
+    { id: "aftsail", x: 144, y: 98 },
+    { id: "foremast", x: 200, y: 104 },
+    { id: "aftmast", x: 98, y: 94 },
+    { id: "wheelhouse", x: 149, y: 128 },
+    { id: "hull", x: 150, y: 168 }
+  ];
+  var PIRATE_TARGETS = [
+    { id: "p-foresail", x: 338, y: 108 },
+    { id: "p-aftsail", x: 416, y: 98 },
+    { id: "p-foremast", x: 360, y: 104 },
+    { id: "p-aftmast", x: 462, y: 94 },
+    { id: "p-wheelhouse", x: 411, y: 128 },
+    { id: "p-hull", x: 410, y: 168 }
+  ];
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function updateScoreUI() {
+    document.getElementById("score").textContent = state.score;
+  }
+
+  function updateLivesUI() {
+    var row = document.getElementById("lives-row");
+    row.innerHTML = "";
+    for (var i = 0; i < PART_LABELS.length; i++) {
+      var chip = document.createElement("div");
+      chip.className = "life-chip" + (i < state.wrong ? " gone" : "");
+      chip.textContent = PART_LABELS[i];
+      row.appendChild(chip);
+    }
+  }
+
+  function updatePirateLivesUI() {
+    var row = document.getElementById("pirate-lives-row");
+    row.innerHTML = "";
+    for (var i = 0; i < PART_LABELS.length; i++) {
+      var chip = document.createElement("div");
+      chip.className = "life-chip pirate" + (i < state.pirateHits ? " gone" : "");
+      chip.textContent = PART_LABELS[i];
+      row.appendChild(chip);
+    }
+  }
+
+  function renderCards() {
+    state.cards = CATEGORIES.map(function (cat) {
+      var pool = QUESTIONS.filter(function (q) { return q.cat === cat.key && state.answeredCorrect.indexOf(q) === -1; });
+      if (pool.length === 0) {
+        pool = QUESTIONS.filter(function (q) { return q.cat === cat.key; });
+      }
+      return pool[Math.floor(Math.random() * pool.length)];
+    });
+    var grid = document.getElementById("cards-grid");
+    grid.classList.remove("disabled", "hidden");
+    grid.innerHTML = "";
+    CATEGORIES.forEach(function (cat, idx) {
+      var chest = document.createElement("div");
+      chest.className = "chest";
+      chest.innerHTML =
+        '<div class="chest-glow"></div>' +
+        '<div class="chest-base"><div class="chest-label">' + cat.label + '</div></div>' +
+        '<div class="chest-lid"></div>' +
+        '<div class="chest-lock"></div>';
+      chest.addEventListener("click", function () { handleCardClick(idx, chest); });
+      grid.appendChild(chest);
+    });
+  }
+
+  function handleCardClick(idx, chestEl) {
+    if (state.locked) return;
+    state.locked = true;
+    ensureAudio();
+    chestEl.classList.add("open");
+    var grid = document.getElementById("cards-grid");
+    grid.classList.add("disabled");
+    setTimeout(function () {
+      grid.classList.add("hidden");
+      showQuestion(state.cards[idx]);
+    }, 500);
+  }
+
+  function showQuestion(item) {
+    var panel = document.getElementById("question-panel");
+    panel.classList.remove("hidden");
+    document.getElementById("question-text").textContent = item.q;
+    var choicesEl = document.getElementById("choices");
+    choicesEl.innerHTML = "";
+    item.choices.forEach(function (choiceText, i) {
+      var btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.textContent = choiceText;
+      btn.addEventListener("click", function () { handleAnswer(i, item, choicesEl); });
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(selected, item, choicesEl) {
+    var correctIdx = item.a;
+    var btns = choicesEl.querySelectorAll(".choice-btn");
+    btns.forEach(function (b) { b.disabled = true; });
+    var isCorrect = selected === correctIdx;
+    btns[correctIdx].classList.add("correct");
+    if (!isCorrect) btns[selected].classList.add("wrong");
+
+    setTimeout(function () {
+      document.getElementById("question-panel").classList.add("hidden");
+      if (isCorrect) {
+        if (state.answeredCorrect.indexOf(item) === -1) {
+          state.answeredCorrect.push(item);
+        }
+        state.score++;
+        updateScoreUI();
+        state.pirateHits++;
+        updatePirateLivesUI();
+        fireCannon(246, 128, PIRATE_TARGETS[state.pirateHits - 1], true);
+      } else {
+        state.wrong++;
+        updateLivesUI();
+        fireCannon(314, 128, OUR_TARGETS[state.wrong - 1], false);
+      }
+    }, 1000);
+  }
+
+  function ensureAudio() {
+    try {
+      if (!window.audioCtx) {
+        window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (window.audioCtx.state === "suspended") {
+        window.audioCtx.resume();
+      }
+    } catch (e) {}
+  }
+
+  function playCannonSound() {
+    try {
+      ensureAudio();
+      var ctx = window.audioCtx;
+      if (!ctx) return;
+      var now = ctx.currentTime;
+
+      var bufferSize = Math.floor(ctx.sampleRate * 0.35);
+      var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+      }
+      var noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      var filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1000, now);
+      filter.frequency.exponentialRampToValueAtTime(70, now + 0.35);
+      var noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(1, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + 0.35);
+
+      var osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(130, now);
+      osc.frequency.exponentialRampToValueAtTime(35, now + 0.28);
+      var oscGain = ctx.createGain();
+      oscGain.gain.setValueAtTime(0.9, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.28);
+    } catch (e) {}
+  }
+
+  function fireCannon(startX, startY, target, isPirateTarget) {
+    playCannonSound();
+    var svg = document.getElementById("ship-svg");
+    var ball = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    ball.setAttribute("cx", startX);
+    ball.setAttribute("cy", startY);
+    ball.setAttribute("r", "5");
+    ball.setAttribute("fill", "#222");
+    svg.appendChild(ball);
+
+    var animX = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+    animX.setAttribute("attributeName", "cx");
+    animX.setAttribute("to", target.x);
+    animX.setAttribute("dur", "0.5s");
+    animX.setAttribute("fill", "freeze");
+    ball.appendChild(animX);
+
+    var animY = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+    animY.setAttribute("attributeName", "cy");
+    animY.setAttribute("to", target.y);
+    animY.setAttribute("dur", "0.5s");
+    animY.setAttribute("fill", "freeze");
+    ball.appendChild(animY);
+
+    setTimeout(function () {
+      if (ball.parentNode) svg.removeChild(ball);
+
+      var puff = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      puff.setAttribute("cx", target.x);
+      puff.setAttribute("cy", target.y);
+      puff.setAttribute("r", "4");
+      puff.setAttribute("fill", "#ffdd88");
+      puff.setAttribute("opacity", "0.9");
+      var pr = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+      pr.setAttribute("attributeName", "r");
+      pr.setAttribute("to", "28");
+      pr.setAttribute("dur", "0.4s");
+      pr.setAttribute("fill", "freeze");
+      puff.appendChild(pr);
+      var po = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+      po.setAttribute("attributeName", "opacity");
+      po.setAttribute("to", "0");
+      po.setAttribute("dur", "0.4s");
+      po.setAttribute("fill", "freeze");
+      puff.appendChild(po);
+      svg.appendChild(puff);
+      setTimeout(function () { if (puff.parentNode) svg.removeChild(puff); }, 450);
+
+      var isHullHit = target.id === "hull" || target.id === "p-hull";
+      if (!isHullHit) {
+        document.getElementById(target.id).classList.add("destroyed");
+      }
+
+      setTimeout(function () {
+        if (isHullHit) {
+          if (target.id === "hull") {
+            sinkShip(false);
+          } else {
+            sinkShip(true);
+          }
+        } else {
+          state.locked = false;
+          renderCards();
+        }
+      }, 500);
+    }, 520);
+  }
+
+  function playSinkSound() {
+    try {
+      ensureAudio();
+      var ctx = window.audioCtx;
+      if (!ctx) return;
+      var now = ctx.currentTime;
+      var glugCount = 4;
+      for (var i = 0; i < glugCount; i++) {
+        var t = now + i * 0.22;
+
+        var osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(220, t);
+        osc.frequency.exponentialRampToValueAtTime(90, t + 0.15);
+        var gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.2);
+
+        var bufferSize = Math.floor(ctx.sampleRate * 0.12);
+        var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        var data = buffer.getChannelData(0);
+        for (var k = 0; k < bufferSize; k++) {
+          data[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / bufferSize, 2);
+        }
+        var noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        var filter = ctx.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(600, t);
+        filter.Q.setValueAtTime(1.2, t);
+        var noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.25, t);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(t);
+        noise.stop(t + 0.12);
+      }
+    } catch (e) {}
+  }
+
+  function sinkShip(pirateWon) {
+    playSinkSound();
+    var groupId = pirateWon ? "pirateShipGroup" : "shipGroup";
+    document.getElementById(groupId).classList.add("sinking");
+    setTimeout(function () {
+      var overlay = document.getElementById("gameover-overlay");
+      var heading = document.getElementById("overlay-heading");
+      if (pirateWon) {
+        heading.textContent = "Victory! The pirate ship has sunk.";
+        overlay.classList.add("win");
+      } else {
+        heading.textContent = "The ship has gone down.";
+        overlay.classList.remove("win");
+      }
+      document.getElementById("final-score-text").textContent = "Final score: " + state.score + " correct answers.";
+      overlay.classList.remove("hidden");
+    }, 1400);
+  }
+
+  function resetGame() {
+    state.score = 0;
+    state.wrong = 0;
+    state.pirateHits = 0;
+    state.locked = false;
+    state.answeredCorrect = [];
+    updateScoreUI();
+    updateLivesUI();
+    updatePirateLivesUI();
+    ["foresail", "aftsail", "foremast", "aftmast", "wheelhouse", "p-foresail", "p-aftsail", "p-foremast", "p-aftmast", "p-wheelhouse"].forEach(function (id) {
+      document.getElementById(id).classList.remove("destroyed");
+    });
+    document.getElementById("shipGroup").classList.remove("sinking");
+    document.getElementById("pirateShipGroup").classList.remove("sinking");
+    document.getElementById("gameover-overlay").classList.add("hidden");
+    document.getElementById("gameover-overlay").classList.remove("win");
+    document.getElementById("question-panel").classList.add("hidden");
+    renderCards();
+  }
+
+  document.getElementById("restart-btn").addEventListener("click", resetGame);
+
+  updateScoreUI();
+  updateLivesUI();
+  updatePirateLivesUI();
+  renderCards();
+</script>
+</body>
+</html>
