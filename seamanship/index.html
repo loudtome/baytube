@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Right of Way &amp; Channel Marker Challenge</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <h1>Right of way &amp; channel marker challenge</h1>
+  <p class="subtitle">Open a treasure chest and answer. Get it right and your cannon fires on the pirate ship. Get it wrong and their cannon fires back.</p>
+
+  <div class="topbar">
+    <div class="stat-block">
+      <div class="stat-label">Score</div>
+      <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Your ship</div>
+      <div class="lives-row" id="lives-row"></div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Pirate ship</div>
+      <div class="lives-row" id="pirate-lives-row"></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg id="ship-svg" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="500" height="140" fill="#bfe3f2"></rect>
+      <path d="M0,140 Q25,132 50,140 T100,140 T150,140 T200,140 T250,140 T300,140 T350,140 T400,140 T450,140 T500,140 L500,220 L0,220 Z" fill="#2b7aa1"></path>
+      <path d="M0,140 Q25,134 50,140 T100,140 T150,140 T200,140 T250,140 T300,140 T350,140 T400,140 T450,140 T500,140" fill="none" stroke="#9fd4ea" stroke-width="2" opacity="0.6"></path>
+
+      <g id="shipGroup" class="ship-group" transform="translate(350,0) scale(-1,1)">
+        <path id="hull" d="M120,150 L280,150 L263,182 Q200,194 137,182 Z" fill="#a9713f" stroke="#6e4423" stroke-width="2"></path>
+
+        <g id="ourCannon">
+          <ellipse cx="130" cy="152" rx="10" ry="5" fill="#3a3a3a"></ellipse>
+          <line x1="130" y1="150" x2="104" y2="128" stroke="#3a3a3a" stroke-width="9" stroke-linecap="round"></line>
+        </g>
+
+        <g id="wheelhouse" class="destructible">
+          <rect x="178" y="112" width="46" height="38" fill="#8a5a3a" stroke="#5a3d24" stroke-width="1.5"></rect>
+          <rect x="172" y="104" width="58" height="10" rx="2" fill="#b33a2e" stroke="#7a2620" stroke-width="1"></rect>
+          <rect x="188" y="122" width="12" height="12" fill="#dceaf0"></rect>
+          <rect x="204" y="122" width="12" height="12" fill="#dceaf0"></rect>
+        </g>
+
+        <g id="foremast" class="destructible">
+          <line x1="150" y1="58" x2="150" y2="150" stroke="#5a3d24" stroke-width="4"></line>
+        </g>
+
+        <g id="aftmast" class="destructible">
+          <line x1="252" y1="38" x2="252" y2="150" stroke="#5a3d24" stroke-width="4"></line>
+          <rect x="252" y="34" width="22" height="5" fill="#b32234"></rect>
+          <rect x="252" y="39" width="22" height="5" fill="#ffffff"></rect>
+          <rect x="252" y="44" width="22" height="5" fill="#3c3b6e"></rect>
+        </g>
+
+        <g id="aftsail" class="destructible">
+          <path d="M252,42 L160,148 L252,148 Z" fill="#f7f3ea" stroke="#b8b0a0" stroke-width="1.5"></path>
+        </g>
+
+        <g id="foresail" class="destructible">
+          <path d="M150,62 L104,140 L150,148 Z" fill="#f7f3ea" stroke="#b8b0a0" stroke-width="1.5"></path>
+        </g>
+      </g>
+
+      <g id="pirateShipGroup" class="ship-group" transform="translate(210,0)">
+        <path id="p-hull" d="M120,150 L280,150 L263,182 Q200,194 137,182 Z" fill="#2e2e2e" stroke="#111111" stroke-width="2"></path>
+
+        <g id="pirateCannon">
+          <ellipse cx="130" cy="152" rx="10" ry="5" fill="#2e2e2e"></ellipse>
+          <line x1="130" y1="150" x2="104" y2="128" stroke="#2e2e2e" stroke-width="9" stroke-linecap="round"></line>
+        </g>
+
+        <g id="p-wheelhouse" class="destructible">
+          <rect x="178" y="112" width="46" height="38" fill="#3a2a20" stroke="#1a120c" stroke-width="1.5"></rect>
+          <rect x="172" y="104" width="58" height="10" rx="2" fill="#111111" stroke="#000000" stroke-width="1"></rect>
+          <rect x="188" y="122" width="12" height="12" fill="#8fa3ab"></rect>
+          <rect x="204" y="122" width="12" height="12" fill="#8fa3ab"></rect>
+        </g>
+
+        <g id="p-foremast" class="destructible">
+          <line x1="150" y1="58" x2="150" y2="150" stroke="#1a120c" stroke-width="4"></line>
+        </g>
+
+        <g id="p-aftmast" class="destructible">
+          <line x1="252" y1="38" x2="252" y2="150" stroke="#1a120c" stroke-width="4"></line>
+          <rect x="252" y="34" width="22" height="15" fill="#111111"></rect>
+          <circle cx="263" cy="39" r="3" fill="#f4ecd8"></circle>
+          <line x1="257" y1="45" x2="269" y2="45" stroke="#f4ecd8" stroke-width="1.5"></line>
+          <line x1="258" y1="43" x2="268" y2="47" stroke="#f4ecd8" stroke-width="1.2"></line>
+          <line x1="268" y1="43" x2="258" y2="47" stroke="#f4ecd8" stroke-width="1.2"></line>
+        </g>
+
+        <g id="p-aftsail" class="destructible">
+          <path d="M252,42 L160,148 L252,148 Z" fill="#9a9a9a" stroke="#555555" stroke-width="1.5"></path>
+        </g>
+
+        <g id="p-foresail" class="destructible">
+          <path d="M150,62 L104,140 L150,148 Z" fill="#9a9a9a" stroke="#555555" stroke-width="1.5"></path>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="cards-grid" id="cards-grid"></div>
+
+  <div class="question-panel hidden" id="question-panel">
+    <p class="question-text" id="question-text"></p>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="overlay hidden" id="gameover-overlay">
+    <h2 id="overlay-heading">The ship has gone down</h2>
+    <p id="final-score-text"></p>
+    <button class="restart-btn" id="restart-btn">Play again</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="audio.js"></script>
+<script src="effects.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

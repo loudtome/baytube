@@ -74,8 +74,10 @@ jobs:
           cp favicon.svg build/favicon.svg
           # AT Relay: static sub-site served at /at-relay/ (no build step needed)
           cp -R at-relay build/at-relay
-          # Seamanship card game: standalone static page
+          # Seamanship card game: static page split into html/css/js under
+          # seamanship/. The root file is now a redirect stub kept for the old URL.
           cp seamanship-card-game.html build/seamanship-card-game.html
+          cp -R seamanship build/seamanship
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
