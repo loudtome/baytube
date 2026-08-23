@@ -30,14 +30,15 @@
 <a href="runner-4.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Runner 4</a>
 <a href="runner-5.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Runner 5</a>
 <a href="runner-6.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Runner 6</a>
-<a href="loft-mountain-map.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Loft Mtn Map</a>
 <a href="van-instructions.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Van Driving</a>
+<a href="sashas-notes.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Sasha's Notes</a>
+<a href="disclaimer.html" style="font-size:12.5px;padding:5px 11px;border-radius:14px;text-decoration:none;color:#0F6E56;border:1px solid #b9ddd0;">Disclaimer</a>
 </nav>
 
 
 <h1>Relay plan: Rockfish Gap &rarr; US-522</h1>
-<div class="stat">18 legs, 107.8 miles, ~14,000 ft of climbing (minimum estimate) &mdash; strict rotation</div>
-<div class="note">Boundary between segment 2 and segment 3 moved from Beagle Gap to Jarman Gap parking (Skyline Drive MP 96.9). Also uses Riprap Parking (splitting Turk Gap&ndash;Blackrock Gap), Blackrock Gap parking (MP 87.4), Limberlost (via the Crescent Rock Trail connector), Bearfence Mountain parking, and Gravel Springs Gap. Pinefield Gap&ndash;Powell Gap merged (dropping Simmons Gap) to keep the leg count at 18. Mileage and elevation from a miles-from-Springer-Mountain reference table. Runners rotate in strict sequential order (1&rarr;6, 1&rarr;6, 1&rarr;6). Vertical gain is summed from every uphill step between named points in that table &mdash; legs marked * span wide gaps between known elevation points (Turk Gap&ndash;Riprap&ndash;Blackrock Gap, Pinefield&ndash;Powell Gap, Fishers Gap&ndash;Limberlost, Thornton Gap&ndash;Elkwallow), so their gain is a floor, not exact. Independent sources put total climbing for the full Rockfish&ndash;Front Royal section around 23,000 ft, so treat gain figures as conservative/relative &mdash; good for comparing legs and runners, not trail-exact.</div>
+<div class="stat">18 legs, 107.7 miles, ~14,700 ft of climbing (minimum estimate) &mdash; strict rotation</div>
+<div class="note">Leg boundaries use real Skyline Drive parking and trailheads along the A.T., including Riprap Parking (MP 90.0), Blackrock Gap Parking (MP 87.1), Lewis Mountain Campground (MP 57.5), Hawksbill Gap trailhead (MP 45.5), and Little Stony Man Parking (MP 39.0). One exception: segment 6/7 meets at Doyles River Trail Parking (MP 81.1), a roadside pull-off with no facilities where the A.T. is a short walk down the Doyles River Trail rather than a direct crossing &mdash; making segment 7 the longest leg at 9.0 miles. Pinefield Gap&ndash;Powell Gap is merged to keep the leg count at 18. Runner totals range 16.6&ndash;19.2 miles, from A.T. waypoint distance data, rotating in strict sequential order (1&rarr;6, 1&rarr;6, 1&rarr;6). Vertical gain is a floor estimate summed from known uphill steps &mdash; legs marked * span wide data gaps &mdash; since independent sources put full-section climbing near 23,000 ft, so treat gain as conservative/relative, not trail-exact.</div>
 
 <canvas id="relayChart"></canvas>
 <div class="tot" id="totRow"></div>
@@ -48,17 +49,17 @@
 <tr><td>1</td><td class="runner">Runner 1</td><td>Rockfish Gap <span class="rt">(I-64 / US-250)</span> &rarr; McCormick Gap</td><td class="num">3.7</td><td class="num">1548</td></tr>
 <tr><td>2</td><td class="runner">Runner 2</td><td>McCormick Gap &rarr; Jarman Gap</td><td class="num">5.0</td><td class="num">200</td></tr>
 <tr><td>3</td><td class="runner">Runner 3</td><td>Jarman Gap &rarr; Turk Gap</td><td class="num">3.4</td><td class="num">450</td></tr>
-<tr><td>4</td><td class="runner">Runner 4</td><td>Turk Gap &rarr; Riprap Parking <span class="rt">*</span></td><td class="num">5.1</td><td class="num">500</td></tr>
-<tr><td>5</td><td class="runner">Runner 5</td><td>Riprap Parking &rarr; Blackrock Gap <span class="rt">*</span></td><td class="num">2.8</td><td class="num">~0</td></tr>
-<tr><td>6</td><td class="runner">Runner 6</td><td>Blackrock Gap &rarr; Loft Mountain</td><td class="num">8.1</td><td class="num">1534</td></tr>
-<tr><td>7</td><td class="runner">Runner 1</td><td>Loft Mountain &rarr; Pinefield Gap</td><td class="num">6.0</td><td class="num">410</td></tr>
+<tr><td>4</td><td class="runner">Runner 4</td><td>Turk Gap &rarr; Riprap Parking <span class="rt">(via Wildcat Ridge)</span> <span class="rt">*</span></td><td class="num">5.1</td><td class="num">500</td></tr>
+<tr><td>5</td><td class="runner">Runner 5</td><td>Riprap Parking &rarr; Blackrock Gap Parking <span class="rt">*</span></td><td class="num">2.8</td><td class="num">~0</td></tr>
+<tr><td>6</td><td class="runner">Runner 6</td><td>Blackrock Gap Parking &rarr; Doyles River Trail Parking <span class="rt">*</span></td><td class="num">5.1</td><td class="num">1030</td></tr>
+<tr><td>7</td><td class="runner">Runner 1</td><td>Doyles River Trail Parking &rarr; Pinefield Gap <span class="rt">(via Loft Mountain)</span> <span class="rt">*</span></td><td class="num">9.0</td><td class="num">910</td></tr>
 <tr><td>8</td><td class="runner">Runner 2</td><td>Pinefield Gap &rarr; Powell Gap <span class="rt">*</span></td><td class="num">5.2</td><td class="num">44</td></tr>
 <tr><td>9</td><td class="runner">Runner 3</td><td>Powell Gap &rarr; Swift Run Gap <span class="rt">(US-33)</span></td><td class="num">6.2</td><td class="num">1393</td></tr>
-<tr><td>10</td><td class="runner">Runner 4</td><td>Swift Run Gap &rarr; Bearfence Mountain Parking</td><td class="num">9.0</td><td class="num">1233</td></tr>
-<tr><td>11</td><td class="runner">Runner 5</td><td>Bearfence Mountain Parking &rarr; Fishers Gap</td><td class="num">9.6</td><td class="num">902</td></tr>
-<tr><td>12</td><td class="runner">Runner 6</td><td>Fishers Gap &rarr; Limberlost <span class="rt">*</span></td><td class="num">4.3</td><td class="num">672</td></tr>
-<tr><td>13</td><td class="runner">Runner 1</td><td>Limberlost &rarr; Pinnacles</td><td class="num">6.4</td><td class="num">647</td></tr>
-<tr><td>14</td><td class="runner">Runner 2</td><td>Pinnacles &rarr; Thornton Gap <span class="rt">(US-211)</span></td><td class="num">5.3</td><td class="num">794</td></tr>
+<tr><td>10</td><td class="runner">Runner 4</td><td>Swift Run Gap &rarr; Lewis Mountain Campground <span class="rt">*</span></td><td class="num">8.2</td><td class="num">1610</td></tr>
+<tr><td>11</td><td class="runner">Runner 5</td><td>Lewis Mountain Campground &rarr; Milam Gap <span class="rt">*</span></td><td class="num">6.2</td><td class="num">712</td></tr>
+<tr><td>12</td><td class="runner">Runner 6</td><td>Milam Gap &rarr; Hawksbill Gap <span class="rt">(via Fishers Gap)</span> <span class="rt">*</span></td><td class="num">6.3</td><td class="num">1060</td></tr>
+<tr><td>13</td><td class="runner">Runner 1</td><td>Hawksbill Gap &rarr; Little Stony Man Parking <span class="rt">(via Limberlost)</span> <span class="rt">*</span></td><td class="num">5.6</td><td class="num">470</td></tr>
+<tr><td>14</td><td class="runner">Runner 2</td><td>Little Stony Man Parking &rarr; Thornton Gap <span class="rt">(via Pinnacles)</span> <span class="rt">*</span></td><td class="num">8.2</td><td class="num">1090</td></tr>
 <tr><td>15</td><td class="runner">Runner 3</td><td>Thornton Gap &rarr; Elkwallow <span class="rt">*</span></td><td class="num">8.6</td><td class="num">855</td></tr>
 <tr><td>16</td><td class="runner">Runner 4</td><td>Elkwallow &rarr; Gravel Springs Gap</td><td class="num">5.9</td><td class="num">1471</td></tr>
 <tr><td>17</td><td class="runner">Runner 5</td><td>Gravel Springs Gap &rarr; Compton Gap</td><td class="num">7.6</td><td class="num">1373</td></tr>
@@ -71,8 +72,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-var totals = [16.1, 15.5, 18.2, 20.0, 20.0, 18.0];
-var gains = [2605, 1038, 2698, 3204, 2275, 2206];
+var totals = [18.3, 18.4, 18.2, 19.2, 16.6, 17.0];
+var gains = [2928, 1334, 2698, 3581, 2085, 2090];
 var row = document.getElementById('totRow');
 totals.forEach(function (t, i) {
   var d = document.createElement('div');
@@ -85,9 +86,9 @@ new Chart(ctx, {
   data: {
     labels: ['Runner 1', 'Runner 2', 'Runner 3', 'Runner 4', 'Runner 5', 'Runner 6'],
     datasets: [
-      { label: 'Run 1', data: [3.7, 5.0, 3.4, 5.1, 2.8, 8.1], backgroundColor: '#5DCAA5' },
-      { label: 'Run 2', data: [6.0, 5.2, 6.2, 9.0, 9.6, 4.3], backgroundColor: '#1D9E75' },
-      { label: 'Run 3', data: [6.4, 5.3, 8.6, 5.9, 7.6, 5.6], backgroundColor: '#0F6E56' }
+      { label: 'Run 1', data: [3.7, 5.0, 3.4, 5.1, 2.8, 5.1], backgroundColor: '#5DCAA5' },
+      { label: 'Run 2', data: [9.0, 5.2, 6.2, 8.2, 6.2, 6.3], backgroundColor: '#1D9E75' },
+      { label: 'Run 3', data: [5.6, 8.2, 8.6, 5.9, 7.6, 5.6], backgroundColor: '#0F6E56' }
     ]
   },
   options: {
