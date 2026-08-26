@@ -37,47 +37,49 @@
 
 
 <h1>Relay plan: Rockfish Gap &rarr; US-522</h1>
-<div class="stat">18 legs, 107.7 miles, ~14,700 ft of climbing (minimum estimate) &mdash; strict rotation</div>
-<div class="note">Leg boundaries use real Skyline Drive parking and trailheads along the A.T., including Riprap Parking (MP 90.0), Blackrock Gap Parking (MP 87.1), Lewis Mountain Campground (MP 57.5), Hawksbill Gap trailhead (MP 45.5), and Little Stony Man Parking (MP 39.0). One exception: segment 6/7 meets at Doyles River Trail Parking (MP 81.1), a roadside pull-off with no facilities where the A.T. is a short walk down the Doyles River Trail rather than a direct crossing &mdash; making segment 7 the longest leg at 9.0 miles. Pinefield Gap&ndash;Powell Gap is merged to keep the leg count at 18. Runner totals range 16.6&ndash;19.2 miles, from A.T. waypoint distance data, rotating in strict sequential order (1&rarr;6, 1&rarr;6, 1&rarr;6). Vertical gain is a floor estimate summed from known uphill steps &mdash; legs marked * span wide data gaps &mdash; since independent sources put full-section climbing near 23,000 ft, so treat gain as conservative/relative, not trail-exact.</div>
+<div class="stat">18 legs, 108.5 miles, elevation pending for revised segments &mdash; strict rotation</div>
+<div class="note">Leg boundaries use real Skyline Drive parking and trailheads along the A.T., including Riprap Parking (MP 90.0), Blackrock Gap Parking (MP 87.1), Ivy Creek Overlook (MP 77.6), Hawksbill Gap trailhead (MP 45.5), and Corbin Cabin Parking (MP 37.8). One exception: segment 6/7 meets at Doyles River Trail Parking (MP 81.1), a roadside pull-off with no facilities where the A.T. is a short walk down the Doyles River Trail rather than a direct crossing. Segment 10 is now the longest leg at 8.8 miles. Runner totals range 16.0&ndash;19.8 miles, from A.T. waypoint distance data, rotating in strict sequential order (1&rarr;6, 1&rarr;6, 1&rarr;6). Segments 7, 8, 10, 11, 13, and 14 were re-routed with new endpoints (Ivy Creek Overlook, the MP 56.9 fire road, and Corbin Cabin Parking replace Pinefield Gap, Lewis Mountain Campground, and Little Stony Man Parking as exchange points) &mdash; their gain/drop figures are marked TBD pending updated elevation data. Known climbing so far totals 13,073 ft; known descent totals 13,550 ft.</div>
 
 <canvas id="relayChart"></canvas>
 <div class="tot" id="totRow"></div>
 
 <table>
-<thead><tr><th>#</th><th>Runner</th><th>Leg</th><th>Miles</th><th>Gain (ft)</th></tr></thead>
+<thead><tr><th>#</th><th>Runner</th><th>Leg</th><th>Miles</th><th>Gain (ft)</th><th>Drop (ft)</th></tr></thead>
 <tbody>
-<tr><td>1</td><td class="runner">Runner 1</td><td>Rockfish Gap <span class="rt">(I-64 / US-250)</span> &rarr; McCormick Gap</td><td class="num">3.7</td><td class="num">1548</td></tr>
-<tr><td>2</td><td class="runner">Runner 2</td><td>McCormick Gap &rarr; Jarman Gap</td><td class="num">5.0</td><td class="num">200</td></tr>
-<tr><td>3</td><td class="runner">Runner 3</td><td>Jarman Gap &rarr; Turk Gap</td><td class="num">3.4</td><td class="num">450</td></tr>
-<tr><td>4</td><td class="runner">Runner 4</td><td>Turk Gap &rarr; Riprap Parking <span class="rt">(via Wildcat Ridge)</span> <span class="rt">*</span></td><td class="num">5.1</td><td class="num">500</td></tr>
-<tr><td>5</td><td class="runner">Runner 5</td><td>Riprap Parking &rarr; Blackrock Gap Parking <span class="rt">*</span></td><td class="num">2.8</td><td class="num">~0</td></tr>
-<tr><td>6</td><td class="runner">Runner 6</td><td>Blackrock Gap Parking &rarr; Doyles River Trail Parking <span class="rt">*</span></td><td class="num">5.1</td><td class="num">1030</td></tr>
-<tr><td>7</td><td class="runner">Runner 1</td><td>Doyles River Trail Parking &rarr; Pinefield Gap <span class="rt">(via Loft Mountain)</span> <span class="rt">*</span></td><td class="num">9.0</td><td class="num">910</td></tr>
-<tr><td>8</td><td class="runner">Runner 2</td><td>Pinefield Gap &rarr; Powell Gap <span class="rt">*</span></td><td class="num">5.2</td><td class="num">44</td></tr>
-<tr><td>9</td><td class="runner">Runner 3</td><td>Powell Gap &rarr; Swift Run Gap <span class="rt">(US-33)</span></td><td class="num">6.2</td><td class="num">1393</td></tr>
-<tr><td>10</td><td class="runner">Runner 4</td><td>Swift Run Gap &rarr; Lewis Mountain Campground <span class="rt">*</span></td><td class="num">8.2</td><td class="num">1610</td></tr>
-<tr><td>11</td><td class="runner">Runner 5</td><td>Lewis Mountain Campground &rarr; Milam Gap <span class="rt">*</span></td><td class="num">6.2</td><td class="num">712</td></tr>
-<tr><td>12</td><td class="runner">Runner 6</td><td>Milam Gap &rarr; Hawksbill Gap <span class="rt">(via Fishers Gap)</span> <span class="rt">*</span></td><td class="num">6.3</td><td class="num">1060</td></tr>
-<tr><td>13</td><td class="runner">Runner 1</td><td>Hawksbill Gap &rarr; Little Stony Man Parking <span class="rt">(via Limberlost)</span> <span class="rt">*</span></td><td class="num">5.6</td><td class="num">470</td></tr>
-<tr><td>14</td><td class="runner">Runner 2</td><td>Little Stony Man Parking &rarr; Thornton Gap <span class="rt">(via Pinnacles)</span> <span class="rt">*</span></td><td class="num">8.2</td><td class="num">1090</td></tr>
-<tr><td>15</td><td class="runner">Runner 3</td><td>Thornton Gap &rarr; Elkwallow <span class="rt">*</span></td><td class="num">8.6</td><td class="num">855</td></tr>
-<tr><td>16</td><td class="runner">Runner 4</td><td>Elkwallow &rarr; Gravel Springs Gap</td><td class="num">5.9</td><td class="num">1471</td></tr>
-<tr><td>17</td><td class="runner">Runner 5</td><td>Gravel Springs Gap &rarr; Compton Gap</td><td class="num">7.6</td><td class="num">1373</td></tr>
-<tr><td>18</td><td class="runner">Runner 6</td><td>Compton Gap &rarr; US-522</td><td class="num">5.6</td><td class="num">~0</td></tr>
+<tr><td>1</td><td class="runner">Runner 1</td><td>Rockfish Gap <span class="rt">(I-64 / US-250)</span> &rarr; McCormick Gap</td><td class="num">3.7</td><td class="num">917</td><td class="num">389</td></tr>
+<tr><td>2</td><td class="runner">Runner 2</td><td>McCormick Gap &rarr; Jarman Gap</td><td class="num">5.0</td><td class="num">1000</td><td class="num">1300</td></tr>
+<tr><td>3</td><td class="runner">Runner 3</td><td>Jarman Gap &rarr; Turk Gap</td><td class="num">3.4</td><td class="num">912</td><td class="num">590</td></tr>
+<tr><td>4</td><td class="runner">Runner 4</td><td>Turk Gap &rarr; Riprap Parking <span class="rt">(via Wildcat Ridge)</span></td><td class="num">5.1</td><td class="num">1060</td><td class="num">900</td></tr>
+<tr><td>5</td><td class="runner">Runner 5</td><td>Riprap Parking &rarr; Blackrock Gap Parking</td><td class="num">2.8</td><td class="num">414</td><td class="num">1020</td></tr>
+<tr><td>6</td><td class="runner">Runner 6</td><td>Blackrock Gap Parking &rarr; Doyles River Trail Parking</td><td class="num">5.1</td><td class="num">1230</td><td class="num">950</td></tr>
+<tr><td>7</td><td class="runner">Runner 1</td><td>Doyles River Trail Parking &rarr; Ivy Creek Overlook <span class="rt">(via Loft Mountain)</span></td><td class="num">7.2</td><td class="num">TBD</td><td class="num">TBD</td></tr>
+<tr><td>8</td><td class="runner">Runner 2</td><td>Ivy Creek Overlook &rarr; Powell Gap</td><td class="num">7.0</td><td class="num">TBD</td><td class="num">TBD</td></tr>
+<tr><td>9</td><td class="runner">Runner 3</td><td>Powell Gap &rarr; Swift Run Gap <span class="rt">(US-33)</span></td><td class="num">6.2</td><td class="num">1500</td><td class="num">1360</td></tr>
+<tr><td>10</td><td class="runner">Runner 4</td><td>Swift Run Gap &rarr; MP 56.9 Fire Road <span class="rt">(just north of Lewis Mtn Campground)</span></td><td class="num">8.8</td><td class="num">TBD</td><td class="num">TBD</td></tr>
+<tr><td>11</td><td class="runner">Runner 5</td><td>MP 56.9 Fire Road &rarr; Milam Gap</td><td class="num">5.6</td><td class="num">TBD</td><td class="num">TBD</td></tr>
+<tr><td>12</td><td class="runner">Runner 6</td><td>Milam Gap &rarr; Hawksbill Gap <span class="rt">(via Fishers Gap)</span></td><td class="num">7.1</td><td class="num">1300</td><td class="num">950</td></tr>
+<tr><td>13</td><td class="runner">Runner 1</td><td>Hawksbill Gap &rarr; Corbin Cabin Parking</td><td class="num">6.8</td><td class="num">TBD</td><td class="num">TBD</td></tr>
+<tr><td>14</td><td class="runner">Runner 2</td><td>Corbin Cabin Parking &rarr; Thornton Gap</td><td class="num">7.0</td><td class="num">TBD</td><td class="num">TBD</td></tr>
+<tr><td>15</td><td class="runner">Runner 3</td><td>Thornton Gap &rarr; Elkwallow</td><td class="num">8.6</td><td class="num">1890</td><td class="num">1700</td></tr>
+<tr><td>16</td><td class="runner">Runner 4</td><td>Elkwallow &rarr; Gravel Springs Gap</td><td class="num">5.9</td><td class="num">1150</td><td class="num">1111</td></tr>
+<tr><td>17</td><td class="runner">Runner 5</td><td>Gravel Springs Gap &rarr; Compton Gap</td><td class="num">7.6</td><td class="num">1200</td><td class="num">1280</td></tr>
+<tr><td>18</td><td class="runner">Runner 6</td><td>Compton Gap &rarr; US-522</td><td class="num">5.6</td><td class="num">500</td><td class="num">2000</td></tr>
 </tbody>
 </table>
 
-<h2>Vertical gain by runner</h2>
+<h2>Vertical gain &amp; drop by runner (partial &mdash; pending updated segments)</h2>
 <canvas id="gainChart"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-var totals = [18.3, 18.4, 18.2, 19.2, 16.6, 17.0];
-var gains = [2928, 1334, 2698, 3581, 2085, 2090];
+var totals = [17.7, 19.0, 18.2, 19.8, 16.0, 17.8];
+var gains = [917, 1000, 4302, 2210, 1614, 3030];
+var drops = [389, 1300, 3650, 2011, 2300, 3900];
+var pending = [true, true, false, true, true, false];
 var row = document.getElementById('totRow');
 totals.forEach(function (t, i) {
   var d = document.createElement('div');
-  d.textContent = 'R' + (i + 1) + ': ' + t.toFixed(1) + ' mi / ' + gains[i] + ' ft';
+  d.textContent = 'R' + (i + 1) + ': ' + t.toFixed(1) + ' mi / +' + gains[i].toLocaleString() + ' / -' + drops[i].toLocaleString() + ' ft' + (pending[i] ? ' (partial)' : '');
   row.appendChild(d);
 });
 var ctx = document.getElementById('relayChart').getContext('2d');
@@ -87,8 +89,8 @@ new Chart(ctx, {
     labels: ['Runner 1', 'Runner 2', 'Runner 3', 'Runner 4', 'Runner 5', 'Runner 6'],
     datasets: [
       { label: 'Run 1', data: [3.7, 5.0, 3.4, 5.1, 2.8, 5.1], backgroundColor: '#5DCAA5' },
-      { label: 'Run 2', data: [9.0, 5.2, 6.2, 8.2, 6.2, 6.3], backgroundColor: '#1D9E75' },
-      { label: 'Run 3', data: [5.6, 8.2, 8.6, 5.9, 7.6, 5.6], backgroundColor: '#0F6E56' }
+      { label: 'Run 2', data: [7.2, 7.0, 6.2, 8.8, 5.6, 7.1], backgroundColor: '#1D9E75' },
+      { label: 'Run 3', data: [6.8, 7.0, 8.6, 5.9, 7.6, 5.6], backgroundColor: '#0F6E56' }
     ]
   },
   options: {
@@ -109,18 +111,21 @@ new Chart(ctx2, {
   type: 'bar',
   data: {
     labels: ['Runner 1', 'Runner 2', 'Runner 3', 'Runner 4', 'Runner 5', 'Runner 6'],
-    datasets: [{ label: 'Vertical gain (ft)', data: gains, backgroundColor: '#0F6E56' }]
+    datasets: [
+      { label: 'Gain (ft)', data: gains, backgroundColor: '#0F6E56' },
+      { label: 'Drop (ft)', data: drops, backgroundColor: '#5DCAA5' }
+    ]
   },
   options: {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
       x: { grid: { display: false } },
-      y: { title: { display: true, text: 'feet of climbing' } }
+      y: { title: { display: true, text: 'feet' } }
     },
     plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: function (c) { return c.parsed.y + ' ft'; } } }
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + c.parsed.y + ' ft'; } } }
     }
   }
 });
